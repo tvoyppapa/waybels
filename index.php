@@ -153,16 +153,19 @@
         </form>
 
         <!-- Форма регистрации -->
+        <!-- Форма регистрации -->
         <form method="POST" id="register-form" class="auth-form" style="display:none;">
           <input type="hidden" name="csrf_token" value="<?= e(generateCsrfToken()) ?>">
           
+          <h3 class="form-title">Регистрация</h3>
+          
           <div class="form-group">
-            <label for="register-name">Имя</label>
+            <label for="register-name">Имя *</label>
             <input 
               type="text" 
               id="register-name"
               name="name" 
-              placeholder="Ваше имя" 
+              placeholder="Введите ваше имя" 
               value="<?= e(old('name')) ?>"
               required
               autocomplete="name"
@@ -171,7 +174,7 @@
           </div>
           
           <div class="form-group">
-            <label for="register-email">Email</label>
+            <label for="register-email">Email *</label>
             <input 
               type="email" 
               id="register-email"
@@ -184,7 +187,7 @@
           </div>
           
           <div class="form-group">
-            <label for="register-password">Пароль</label>
+            <label for="register-password">Пароль *</label>
             <input 
               type="password" 
               id="register-password"
@@ -198,7 +201,10 @@
           </div>
           
           <button type="submit" name="register" class="btn-primary">
-            Создать аккаунт
+            <span>Зарегистрироваться</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
           </button>
           
           <p class="switch-text">

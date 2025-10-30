@@ -335,6 +335,21 @@ body {
   gap: 20px;
 }
 
+.welcome-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.form-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+  color: var(--text-primary);
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -392,6 +407,15 @@ input::placeholder {
   cursor: pointer;
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary svg {
+  flex-shrink: 0;
+  stroke: currentColor;
 }
 
 .btn-primary:hover {
@@ -402,6 +426,12 @@ input::placeholder {
 
 .btn-primary:active {
   transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ===============================================
