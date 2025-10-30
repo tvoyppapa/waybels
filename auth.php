@@ -101,7 +101,7 @@ require_once 'auth_handler.php';
         <?php endif; ?>
 
         <!-- Форма входа -->
-        <form method="POST" id="login-form" class="auth-form">
+        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" id="login-form" class="auth-form">
           <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCsrfToken()) ?>">
           
           <div class="form-group">
@@ -142,7 +142,7 @@ require_once 'auth_handler.php';
         </form>
 
         <!-- Форма регистрации -->
-        <form method="POST" id="register-form" class="auth-form" style="display:none;">
+        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" id="register-form" class="auth-form" style="display:none;">
           <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCsrfToken()) ?>">
           
           <h3 class="form-title">Регистрация</h3>
