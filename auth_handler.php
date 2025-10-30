@@ -168,11 +168,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     }
 }
 
-// Функция для безопасного вывода
-function e($string) {
-    return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
-}
-
 /**
  * Сброс интересов (для возврата к квизу)
  */
