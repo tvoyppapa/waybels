@@ -1,222 +1,209 @@
-<?php require_once 'auth.php'; ?>
+<?php
+/**
+ * Главная страница - Landing Page
+ */
+session_start();
+
+// Если пользователь уже авторизован - редирект на dashboard
+if (isset($_SESSION['user_id'])) {
+    header("Location: dashboard.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= e(APP_NAME) ?> — Обучайся легко</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style/auth.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WayBels - Найди своего репетитора</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #7F2CDF 0%, #9851E8 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 80px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: auto;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .btn {
+            padding: 12px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #7F2CDF;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 24px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            margin-top: 100px;
+        }
+        
+        .feature {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .feature h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .feature p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 18px;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
-
-<div class="auth-container">
-  <!-- Левая часть -->
-  <div class="auth-left">
-    <div class="promo-content">
-      <img src="img/logo.svg" alt="<?= e(APP_NAME) ?>" class="logo">
-      <div class="promo">
-        <h1><?= e(APP_NAME) ?></h1>
-        <p><?= e(APP_TAGLINE) ?></p>
-      </div>
-      
-      <!-- Преимущества -->
-      <div class="features">
-        <div class="feature-item">
-          <span class="feature-icon">✨</span>
-          <span>Персонализированное обучение</span>
-        </div>
-        <div class="feature-item">
-          <span class="feature-icon">🎯</span>
-          <span>Достигайте целей быстрее</span>
-        </div>
-        <div class="feature-item">
-          <span class="feature-icon">🏆</span>
-          <span>Отслеживайте прогресс</span>
-        </div>
-      </div>
+    
+    <div class="container">
+        <header>
+            <img src="img/logo-white.svg" alt="WayBels" class="logo">
+            <div class="auth-buttons">
+                <a href="auth.php" class="btn btn-secondary">Войти</a>
+                <a href="register.php" class="btn btn-primary">Регистрация</a>
+            </div>
+        </header>
+        
+        <section class="hero">
+            <h1>Найди своего идеального репетитора</h1>
+            <p>Пространство, где знание превращается в опыт</p>
+            
+            <div class="cta-buttons">
+                <a href="register.php" class="btn btn-primary" style="padding: 16px 48px; font-size: 18px;">
+                    Начать обучение
+                </a>
+                <a href="auth.php" class="btn btn-secondary" style="padding: 16px 48px; font-size: 18px;">
+                    У меня есть аккаунт
+                </a>
+            </div>
+        </section>
+        
+        <section class="features">
+            <div class="feature">
+                <div class="feature-icon">✨</div>
+                <h3>Персонализированно</h3>
+                <p>Найдите репетитора, который идеально подходит именно вам</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <h3>Эффективно</h3>
+                <p>Достигайте своих целей быстрее с профессиональными преподавателями</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🏆</div>
+                <h3>Результативно</h3>
+                <p>Отслеживайте прогресс и празднуйте достижения</p>
+            </div>
+        </section>
     </div>
-  </div>
-
-  <!-- Правая часть -->
-  <div class="auth-right">
-    <?php if ($currentView === 'quiz'): ?>
-      <!-- Квиз выбора интересов -->
-      <div class="quiz-container" id="quiz-section">
-        <h2>Что бы вы хотели изучать?</h2>
-        <p class="subtitle">Выберите направление, которое вам интересно</p>
-        
-        <?php if ($error): ?>
-          <div class="alert alert-error" role="alert">
-            <?= e($error) ?>
-          </div>
-        <?php endif; ?>
-        
-        <form method="POST" class="quiz-form" id="quiz-form">
-          <input type="hidden" name="csrf_token" value="<?= e(generateCsrfToken()) ?>">
-          
-          <?php foreach (INTEREST_CATEGORIES as $key => $category): ?>
-            <button 
-              type="submit" 
-              name="interests" 
-              value="<?= e($key) ?>"
-              class="quiz-btn"
-              data-interest="<?= e($key) ?>"
-            >
-              <span class="quiz-icon"><?= $category['icon'] ?></span>
-              <span class="quiz-name"><?= e($category['name']) ?></span>
-            </button>
-          <?php endforeach; ?>
-        </form>
-      </div>
-
-    <?php else: ?>
-      <!-- Форма входа/регистрации -->
-      <div class="form-container">
-        <div class="form-header">
-          <h2>Добро пожаловать в <?= e(APP_NAME) ?></h2>
-          <?php if (isset($_SESSION['interests'])): ?>
-            <p class="selected-interest">
-              Выбрано: <strong><?= e(INTEREST_CATEGORIES[$_SESSION['interests']]['name']) ?></strong>
-              <a href="?reset=1" class="reset-interest" title="Изменить выбор">×</a>
-            </p>
-          <?php endif; ?>
-        </div>
-
-        <!-- Google вход -->
-        <a href="google_login.php" class="google-btn">
-          <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Войти через Google
-        </a>
-
-        <div class="divider"><span>или</span></div>
-
-        <!-- Сообщения об ошибках/успехе -->
-        <?php if ($error): ?>
-          <div class="alert alert-error" role="alert">
-            <?= e($error) ?>
-          </div>
-        <?php endif; ?>
-        
-        <?php if ($success): ?>
-          <div class="alert alert-success" role="alert">
-            <?= e($success) ?>
-          </div>
-        <?php endif; ?>
-
-        <!-- Форма входа -->
-        <form method="POST" id="login-form" class="auth-form">
-          <input type="hidden" name="csrf_token" value="<?= e(generateCsrfToken()) ?>">
-          
-          <div class="form-group">
-            <label for="login-email">Email</label>
-            <input 
-              type="email" 
-              id="login-email"
-              name="email" 
-              placeholder="your@email.com" 
-              value="<?= e(old('email')) ?>"
-              required
-              autocomplete="email"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="login-password">Пароль</label>
-            <input 
-              type="password" 
-              id="login-password"
-              name="password" 
-              placeholder="Введите пароль" 
-              required
-              autocomplete="current-password"
-            >
-          </div>
-          
-          <button type="submit" name="login" class="btn-primary">
-            Войти
-          </button>
-
-          <p class="switch-text">
-            Нет аккаунта? <a href="#" id="show-register">Зарегистрироваться</a>
-          </p>
-          <p class="switch-text">
-            <a href="reset_password.php">Забыли пароль?</a>
-          </p>
-        </form>
-
-        <!-- Форма регистрации -->
-        <!-- Форма регистрации -->
-        <form method="POST" id="register-form" class="auth-form" style="display:none;">
-          <input type="hidden" name="csrf_token" value="<?= e(generateCsrfToken()) ?>">
-          
-          <h3 class="form-title">Регистрация</h3>
-          
-          <div class="form-group">
-            <label for="register-name">Имя *</label>
-            <input 
-              type="text" 
-              id="register-name"
-              name="name" 
-              placeholder="Введите ваше имя" 
-              value="<?= e(old('name')) ?>"
-              required
-              autocomplete="name"
-              minlength="2"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="register-email">Email *</label>
-            <input 
-              type="email" 
-              id="register-email"
-              name="email" 
-              placeholder="your@email.com" 
-              value="<?= e(old('email')) ?>"
-              required
-              autocomplete="email"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="register-password">Пароль *</label>
-            <input 
-              type="password" 
-              id="register-password"
-              name="password" 
-              placeholder="Минимум 6 символов" 
-              required
-              autocomplete="new-password"
-              minlength="6"
-            >
-            <small class="form-hint">Минимум 6 символов</small>
-          </div>
-          
-          <button type="submit" name="register" class="btn-primary">
-            <span>Зарегистрироваться</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </button>
-          
-          <p class="switch-text">
-            Уже есть аккаунт? <a href="#" id="show-login">Войти</a>
-          </p>
-        </form>
-      </div>
-    <?php endif; ?>
-  </div>
-</div>
-
-<script src="js/auth.js"></script>
-
+    
 </body>
 </html>

@@ -198,7 +198,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 </button>
                 
                 <p class="switch-text">
-                    Уже есть аккаунт? <a href="index.php">Войти</a>
+                    Уже есть аккаунт? <a href="auth.php">Войти</a>
+                </p>
+                <p class="switch-text">
+                    <a href="index.php">← На главную</a>
                 </p>
             </form>
         </div>
