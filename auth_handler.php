@@ -139,11 +139,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     // Регистрация нового пользователя
                     $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
                     
-                    $stmt = $pdo->prepare(
-                        "INSERT INTO users (name, email, password, interests, role, created_at) 
-                         VALUES (?, ?, ?, ?, 'user', NOW())"
-                    );
-                    $stmt->execute([$name, $email, $hashedPassword, $interests]);
+                    // Проверяем, есть ли колонка interests в таблице
+                    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'interests'");
+                    $hasInterestsColumn = $stmt->fetch();
+                    
+                    if ($hasInterestsColumn) {
+                        // Если есть колонка interests
+                        $stmt = $pdo->prepare(
+                            "INSERT INTO users (name, email, password, interests, role, created_at) 
+                             VALUES (?, ?, ?, ?, 'user', NOW())"
+                        );
+                        $stmt->execute([$name, $email, $hashedPassword, $interests]);
+                    } else {
+                        // Если нет колонки interests (старая БД)
+                        $stmt = $pdo->prepare(
+                            "INSERT INTO users (name, email, password, role) 
+                             VALUES (?, ?, ?, 'user')"
+                        );
+                        $stmt->execute([$name, $email, $hashedPassword]);
+                    }
                     
                     // Автоматический вход после регистрации
                     $_SESSION['user_id'] = $pdo->lastInsertId();

@@ -4,7 +4,7 @@
  */
 
 $host = "localhost";
-$dbname = "waybels_db";
+$dbname = "wibs";
 $username = "root";
 $password = "WayBels2553030App!";
 
