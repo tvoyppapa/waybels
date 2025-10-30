@@ -4,6 +4,8 @@
 
 document.addEventListener('DOMContentLoaded', function() {
   
+  console.log('Auth.js загружен'); // Для отладки
+  
   // ===============================================
   // Переключение между формами входа и регистрации
   // ===============================================
@@ -12,9 +14,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const showRegisterBtn = document.getElementById('show-register');
   const showLoginBtn = document.getElementById('show-login');
   
-  if (showRegisterBtn) {
+  console.log('Login form:', loginForm);
+  console.log('Register form:', registerForm);
+  console.log('Show register btn:', showRegisterBtn);
+  console.log('Show login btn:', showLoginBtn);
+  
+  if (showRegisterBtn && loginForm && registerForm) {
     showRegisterBtn.addEventListener('click', function(e) {
       e.preventDefault();
+      console.log('Показываем форму регистрации');
+      
       loginForm.style.display = 'none';
       registerForm.style.display = 'flex';
       
@@ -26,14 +35,20 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 10);
       
       // Фокус на первом поле
-      const firstInput = registerForm.querySelector('input');
-      if (firstInput) firstInput.focus();
+      const firstInput = registerForm.querySelector('input:not([type="hidden"])');
+      if (firstInput) {
+        setTimeout(() => firstInput.focus(), 100);
+      }
     });
+  } else {
+    console.error('Не найдены элементы для переключения форм');
   }
   
-  if (showLoginBtn) {
+  if (showLoginBtn && loginForm && registerForm) {
     showLoginBtn.addEventListener('click', function(e) {
       e.preventDefault();
+      console.log('Показываем форму входа');
+      
       registerForm.style.display = 'none';
       loginForm.style.display = 'flex';
       
@@ -45,8 +60,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 10);
       
       // Фокус на первом поле
-      const firstInput = loginForm.querySelector('input');
-      if (firstInput) firstInput.focus();
+      const firstInput = loginForm.querySelector('input:not([type="hidden"])');
+      if (firstInput) {
+        setTimeout(() => firstInput.focus(), 100);
+      }
     });
   }
   
