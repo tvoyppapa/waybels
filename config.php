@@ -16,11 +16,11 @@ ini_set('session.cookie_samesite', 'Strict');
 define('APP_NAME', 'Wibs');
 define('APP_TAGLINE', 'Пространство, где знание превращается в опыт');
 
-// Настройки базы данных (настройте под свою БД)
+// Настройки базы данных
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'wibs');
+define('DB_NAME', 'waybels_db');
 define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_PASS', 'WayBels2553030App!');
 define('DB_CHARSET', 'utf8mb4');
 
 // Доступные категории интересов
@@ -33,4 +33,4 @@ define('INTEREST_CATEGORIES', [
 ]);
 
 // URL для редиректа после входа
-define('DASHBOARD_URL', 'dashboard.html');
+define('DASHBOARD_URL', 'dashboard.php');
