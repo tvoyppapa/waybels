@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Wibs</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: "Inter", -apple-system, sans-serif;
+      background: linear-gradient(135deg, #7F2CDF 0%, #9851E8 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+    }
+    
+    .dashboard-container {
+      text-align: center;
+      max-width: 600px;
+      padding: 40px;
+    }
+    
+    h1 {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    p {
+      font-size: 20px;
+      margin-bottom: 32px;
+      opacity: 0.9;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 20px;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 12px 32px;
+      background: white;
+      color: #7F2CDF;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>🎉 Добро пожаловать!</h1>
+    <p>Вы успешно вошли в систему</p>
+    
+    <div class="card">
+      <h2 style="margin-bottom: 16px;">Это ваша панель управления</h2>
+      <p style="font-size: 16px;">Здесь будет отображаться ваш контент, курсы и прогресс обучения.</p>
+    </div>
+    
+    <a href="logout.php" class="btn">Выйти</a>
+  </div>
+</body>
+</html>
