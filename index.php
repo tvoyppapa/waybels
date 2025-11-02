@@ -165,8 +165,8 @@ if (isset($_SESSION['user_id'])) {
         <header>
             <img src="img/logo-white.svg" alt="WayBels" class="logo">
             <div class="auth-buttons">
-                <a href="auth.php" class="btn btn-secondary">Войти</a>
-                <a href="register.php" class="btn btn-primary">Регистрация</a>
+                <a href="auth_simple.php" class="btn btn-secondary">Войти</a>
+                <a href="auth_simple.php" class="btn btn-primary">Регистрация</a>
             </div>
         </header>
         
@@ -175,10 +175,10 @@ if (isset($_SESSION['user_id'])) {
             <p>Пространство, где знание превращается в опыт</p>
             
             <div class="cta-buttons">
-                <a href="register.php" class="btn btn-primary" style="padding: 16px 48px; font-size: 18px;">
+                <a href="auth_simple.php" class="btn btn-primary" style="padding: 16px 48px; font-size: 18px;">
                     Начать обучение
                 </a>
-                <a href="auth.php" class="btn btn-secondary" style="padding: 16px 48px; font-size: 18px;">
+                <a href="auth_simple.php" class="btn btn-secondary" style="padding: 16px 48px; font-size: 18px;">
                     У меня есть аккаунт
                 </a>
             </div>
