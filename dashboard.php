@@ -106,7 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
         body {
             margin: 0;
             padding: 0;
-            background: var(--bg-gradient);
             min-height: 100vh;
         }
         

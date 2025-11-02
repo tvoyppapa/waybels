@@ -7,26 +7,26 @@
    CSS Variables - Светлая тема
    =============================================== */
 :root {
-  /* Glassmorphism эффекты */
-  --glass-bg: rgba(255, 255, 255, 0.15);
-  --glass-bg-strong: rgba(255, 255, 255, 0.25);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.25);
-  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-  --glass-shadow-lg: 0 12px 48px rgba(31, 38, 135, 0.25);
-  --glass-blur: 12px;
-  --glass-blur-strong: 20px;
+  /* Glassmorphism эффекты - БЕЛЫЙ ФОН */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-strong: rgba(255, 255, 255, 0.85);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.12);
+  --glass-blur: 16px;
+  --glass-blur-strong: 24px;
   
-  /* Градиенты */
+  /* Градиенты - ТОЛЬКО ДЛЯ КНОПОК */
   --gradient-primary: linear-gradient(135deg, #7F2CDF 0%, #9851E8 100%);
   --gradient-secondary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   --gradient-glass: linear-gradient(135deg, 
+    rgba(127, 44, 223, 0.05) 0%, 
+    rgba(152, 81, 232, 0.05) 100%);
+  --gradient-glass-hover: linear-gradient(135deg, 
     rgba(127, 44, 223, 0.1) 0%, 
     rgba(152, 81, 232, 0.1) 100%);
-  --gradient-glass-hover: linear-gradient(135deg, 
-    rgba(127, 44, 223, 0.2) 0%, 
-    rgba(152, 81, 232, 0.2) 100%);
   
   /* Цвета */
   --primary: #7F2CDF;
@@ -38,11 +38,11 @@
   --warning: #FF9500;
   --info: #007AFF;
   
-  /* Фоны */
-  --bg-primary: #f5f7fa;
-  --bg-secondary: #ffffff;
-  --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  /* Фоны - СВЕТЛЫЕ */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   
   /* Текст */
   --text-primary: #1D1D1F;
@@ -79,17 +79,17 @@
    =============================================== */
 [data-theme="dark"] {
   /* Glassmorphism для темной темы */
-  --glass-bg: rgba(0, 0, 0, 0.3);
-  --glass-bg-strong: rgba(0, 0, 0, 0.5);
-  --glass-bg-subtle: rgba(0, 0, 0, 0.2);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --glass-shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.6);
+  --glass-bg: rgba(30, 30, 35, 0.7);
+  --glass-bg-strong: rgba(30, 30, 35, 0.85);
+  --glass-bg-subtle: rgba(30, 30, 35, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.7);
   
   /* Фоны */
-  --bg-primary: #1C1C1E;
-  --bg-secondary: #2C2C2E;
-  --bg-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
+  --bg-primary: #1a1a1f;
+  --bg-secondary: #25252a;
+  --bg-gradient: linear-gradient(135deg, #2d2d35 0%, #1a1a1f 100%);
   
   /* Текст */
   --text-primary: #FFFFFF;
@@ -97,8 +97,8 @@
   --text-tertiary: #6E6E73;
   
   /* Границы */
-  --border-color: rgba(255, 255, 255, 0.15);
-  --border-light: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-light: rgba(255, 255, 255, 0.06);
 }
 
 /* ===============================================
@@ -112,8 +112,8 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg-primary);
-  background-image: var(--bg-pattern);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;

@@ -73,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_profile'])) {
         body {
             margin: 0;
             padding: 0;
-            background: var(--bg-gradient);
             min-height: 100vh;
         }
         
