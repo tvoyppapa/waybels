@@ -3,22 +3,25 @@ session_start();
 require_once 'db.php';
 require_once 'helpers.php';
 
+// Проверка авторизации
 if (!isset($_SESSION['user_id'])) {
     redirect('index.php');
 }
 
 $user_id = $_SESSION['user_id'];
 
+// Получаем данные пользователя
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
+// Обновляем статус онлайн
 $stmt = $pdo->prepare("UPDATE users SET is_online = 1, last_seen = NOW() WHERE id = ?");
 $stmt->execute([$user_id]);
 
 $theme = $user['theme'] ?? 'light';
 
-// Категории
+// Категории для быстрого поиска
 $categories = [
     'all' => ['icon' => '🌟', 'name' => 'Все'],
     'languages' => ['icon' => '🌍', 'name' => 'Языки'],
@@ -29,10 +32,12 @@ $categories = [
     'music' => ['icon' => '🎵', 'name' => 'Музыка']
 ];
 
+// Выбранная категория
 $category = $_GET['category'] ?? 'all';
 $search = $_GET['search'] ?? '';
 $sort = $_GET['sort'] ?? 'rating';
 
+// Получаем репетиторов
 $query = "SELECT u.*, tp.* 
           FROM users u 
           INNER JOIN teacher_profiles tp ON u.id = tp.user_id 
@@ -47,32 +52,50 @@ if ($search) {
 }
 
 switch ($sort) {
-    case 'lessons': $query .= " ORDER BY tp.total_lessons DESC"; break;
-    case 'newest': $query .= " ORDER BY tp.created_at DESC"; break;
-    default: $query .= " ORDER BY tp.rating DESC, tp.rating_count DESC";
+    case 'lessons':
+        $query .= " ORDER BY tp.total_lessons DESC";
+        break;
+    case 'newest':
+        $query .= " ORDER BY tp.created_at DESC";
+        break;
+    case 'rating':
+    default:
+        $query .= " ORDER BY tp.rating DESC, tp.rating_count DESC";
+        break;
 }
 
 $stmt = $pdo->prepare($query);
-if ($category !== 'all') $stmt->bindValue(':category', $category);
-if ($search) $stmt->bindValue(':search', "%$search%");
+if ($category !== 'all') {
+    $stmt->bindValue(':category', $category);
+}
+if ($search) {
+    $searchTerm = "%$search%";
+    $stmt->bindValue(':search', $searchTerm);
+}
 $stmt->execute();
 $teachers = $stmt->fetchAll();
 
+// Получаем избранных
 $stmt = $pdo->prepare("SELECT teacher_id FROM favorites WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $favorites = array_column($stmt->fetchAll(), 'teacher_id');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
-    $teacher_id = (int)$_POST['teacher_id'];
-    if (in_array($teacher_id, $favorites)) {
-        $stmt = $pdo->prepare("DELETE FROM favorites WHERE user_id = ? AND teacher_id = ?");
-        $stmt->execute([$user_id, $teacher_id]);
-    } else {
-        $stmt = $pdo->prepare("INSERT INTO favorites (user_id, teacher_id) VALUES (?, ?)");
-        $stmt->execute([$user_id, $teacher_id]);
+// AJAX handlers
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['toggle_favorite'])) {
+        $teacher_id = (int)$_POST['teacher_id'];
+        
+        if (in_array($teacher_id, $favorites)) {
+            $stmt = $pdo->prepare("DELETE FROM favorites WHERE user_id = ? AND teacher_id = ?");
+            $stmt->execute([$user_id, $teacher_id]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO favorites (user_id, teacher_id) VALUES (?, ?)");
+            $stmt->execute([$user_id, $teacher_id]);
+        }
+        
+        echo json_encode(['success' => true]);
+        exit;
     }
-    echo json_encode(['success' => true]);
-    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -81,34 +104,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WayBels - Репетиторы</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style/glass.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        .layout {
-            display: flex;
-            min-height: 100vh;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        /* SIDEBAR СЛЕВА */
-        .sidebar {
-            width: 280px;
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
             background: var(--glass-bg);
             backdrop-filter: blur(var(--glass-blur-strong));
             -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-            border-right: 1px solid var(--glass-border);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
-            left: 0;
-            top: 0;
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
         }
         
-        .sidebar-logo {
-            padding: 24px;
-            border-bottom: 1px solid var(--glass-border);
+        .header-top {
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 32px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 32px;
         }
         
         .logo {
@@ -124,125 +154,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
         }
         
         .logo-text {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
-        /* КАТЕГОРИИ В SIDEBAR */
-        .sidebar-categories {
-            padding: 16px;
-            border-bottom: 1px solid var(--glass-border);
-        }
-        
-        .categories-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            padding: 0 8px;
-        }
-        
-        .category-link {
+        /* Категории */
+        .categories {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: var(--radius-md);
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .category-btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            background: transparent;
+            border: 1px solid var(--glass-border);
             color: var(--text-secondary);
-            text-decoration: none;
             font-weight: 500;
             font-size: 14px;
+            cursor: pointer;
             transition: all var(--transition);
-            margin-bottom: 4px;
-        }
-        
-        .category-link:hover {
-            background: var(--glass-bg-subtle);
-            color: var(--text-primary);
-        }
-        
-        .category-link.active {
-            background: var(--gradient-glass);
-            color: var(--primary);
-            font-weight: 600;
-        }
-        
-        /* МЕНЮ НАВИГАЦИИ В SIDEBAR */
-        .sidebar-nav {
-            flex: 1;
-            padding: 16px;
-        }
-        
-        .nav-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            padding: 0 8px;
-        }
-        
-        .nav-link {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: var(--radius-md);
-            color: var(--text-secondary);
+            gap: 6px;
             text-decoration: none;
-            font-weight: 500;
-            transition: all var(--transition);
-            margin-bottom: 4px;
         }
         
-        .nav-link:hover {
+        .category-btn:hover {
             background: var(--glass-bg-subtle);
-            color: var(--text-primary);
+            transform: translateY(-2px);
         }
         
-        .nav-link.active {
+        .category-btn.active {
             background: var(--gradient-primary);
             color: white;
+            border-color: transparent;
         }
         
-        .nav-link svg {
-            width: 20px;
-            height: 20px;
-        }
-        
-        /* MAIN CONTENT */
-        .main-wrapper {
-            margin-left: 280px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* HEADER СВЕРХУ */
-        .header {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: var(--glass-bg);
-            backdrop-filter: blur(var(--glass-blur-strong));
-            -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-            border-bottom: 1px solid var(--glass-border);
-            padding: 16px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 24px;
-        }
-        
+        /* Search */
         .search-box {
             flex: 1;
-            max-width: 500px;
+            max-width: 400px;
             position: relative;
         }
         
@@ -265,13 +221,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
             font-size: 15px;
+            transition: all var(--transition);
         }
         
         .search-input:focus {
             outline: none;
+            background: var(--glass-bg);
             border-color: var(--primary);
         }
         
+        /* User Menu */
         .user-menu {
             position: relative;
         }
@@ -299,6 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             min-width: 220px;
             background: var(--glass-bg-strong);
             backdrop-filter: blur(var(--glass-blur-strong));
+            -webkit-backdrop-filter: blur(var(--glass-blur-strong));
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-lg);
             box-shadow: var(--glass-shadow-lg);
@@ -354,15 +314,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             margin: 4px 0;
         }
         
-        /* CONTENT LAYOUT */
-        .content-wrapper {
+        /* Main Layout */
+        .main-container {
             display: grid;
             grid-template-columns: 1fr 350px;
             gap: 24px;
             padding: 24px 32px;
-            flex: 1;
+            max-width: 1600px;
+            margin: 0 auto;
         }
         
+        /* Teachers List */
         .teachers-section {
             display: flex;
             flex-direction: column;
@@ -377,7 +339,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
         }
         
         .section-title {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
         }
         
@@ -387,12 +349,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
+            font-size: 14px;
             cursor: pointer;
         }
         
         .teacher-card {
             background: var(--glass-bg);
             backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-xl);
             padding: 20px;
@@ -412,6 +376,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             border-radius: var(--radius-lg);
             object-fit: cover;
             border: 2px solid var(--glass-border);
+            flex-shrink: 0;
         }
         
         .teacher-info {
@@ -435,6 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             font-size: 14px;
             color: var(--text-secondary);
             margin-bottom: 12px;
+            line-height: 1.5;
         }
         
         .teacher-stats {
@@ -455,6 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             font-size: 22px;
             font-weight: 700;
             color: var(--primary);
+            margin-bottom: 8px;
         }
         
         .teacher-price span {
@@ -478,6 +445,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             box-shadow: var(--shadow-md);
         }
         
+        /* Calendar Sidebar */
         .calendar-sidebar {
             position: sticky;
             top: 90px;
@@ -487,6 +455,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
         .calendar-card {
             background: var(--glass-bg);
             backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-xl);
             padding: 24px;
@@ -504,72 +473,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             color: var(--text-secondary);
         }
         
+        .calendar-placeholder svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        
         @media (max-width: 1200px) {
-            .content-wrapper {
+            .main-container {
                 grid-template-columns: 1fr;
             }
+            
             .calendar-sidebar {
                 position: static;
             }
         }
         
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
+            .header-top {
+                flex-direction: column;
+                padding: 16px;
+                gap: 16px;
             }
-            .main-wrapper {
-                margin-left: 0;
+            
+            .categories {
+                width: 100%;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+            
+            .search-box {
+                max-width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <div class="layout">
-        <!-- SIDEBAR СЛЕВА -->
-        <aside class="sidebar">
-            <!-- Лого -->
-            <div class="sidebar-logo">
-                <a href="dashboard.php" class="logo">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-top">
+            <div class="header-left">
+                <!-- Logo -->
+                <a href="dashboard_new.php" class="logo">
                     <img src="img/logo-white.svg" alt="WayBels" class="logo-img">
                     <span class="logo-text">WayBels</span>
                 </a>
+                
+                <!-- Категории -->
+                <nav class="categories">
+                    <?php foreach ($categories as $key => $cat): ?>
+                        <a href="?category=<?= $key ?>" class="category-btn <?= $category === $key ? 'active' : '' ?>">
+                            <span><?= $cat['icon'] ?></span>
+                            <span><?= $cat['name'] ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </nav>
             </div>
             
-            <!-- КАТЕГОРИИ -->
-            <div class="sidebar-categories">
-                <div class="categories-title">Категории</div>
-                <?php foreach ($categories as $key => $cat): ?>
-                    <a href="?category=<?= $key ?>" class="category-link <?= $category === $key ? 'active' : '' ?>">
-                        <span><?= $cat['icon'] ?></span>
-                        <span><?= $cat['name'] ?></span>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-            
-            <!-- НАВИГАЦИЯ -->
-            <nav class="sidebar-nav">
-                <div class="nav-title">Меню</div>
-                
-                <a href="dashboard.php" class="nav-link active">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    </svg>
-                    <span>Главная</span>
-                </a>
-                
-                <a href="messages.php" class="nav-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    <span>Сообщения</span>
-                </a>
-            </nav>
-        </aside>
-        
-        <!-- MAIN CONTENT -->
-        <div class="main-wrapper">
-            <!-- HEADER СВЕРХУ -->
-            <header class="header">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <!-- Поиск -->
                 <div class="search-box">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"/>
@@ -584,6 +547,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
                     >
                 </div>
                 
+                <!-- User Menu -->
                 <div class="user-menu">
                     <div class="user-avatar" style="background-image: url('<?= e($user['avatar']) ?>')" onclick="toggleUserMenu()"></div>
                     
@@ -621,66 +585,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
                         </a>
                     </div>
                 </div>
-            </header>
-            
-            <!-- CONTENT -->
-            <div class="content-wrapper">
-                <div class="teachers-section">
-                    <div class="section-header">
-                        <h2 class="section-title">Репетиторы</h2>
-                        <select class="sort-select" onchange="updateSort(this.value)">
-                            <option value="rating" <?= $sort === 'rating' ? 'selected' : '' ?>>По рейтингу</option>
-                            <option value="lessons" <?= $sort === 'lessons' ? 'selected' : '' ?>>По урокам</option>
-                            <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Новые</option>
-                        </select>
-                    </div>
-                    
-                    <?php foreach ($teachers as $teacher): ?>
-                        <div class="teacher-card">
-                            <img src="<?= e($teacher['avatar']) ?>" alt="<?= e($teacher['name']) ?>" class="teacher-avatar">
-                            
-                            <div class="teacher-info">
-                                <h3 class="teacher-name"><?= e($teacher['name']) ?></h3>
-                                <div class="teacher-subject"><?= e($teacher['subject']) ?></div>
-                                <p class="teacher-desc"><?= e(mb_substr($teacher['description'], 0, 120)) ?>...</p>
-                                
-                                <div class="teacher-stats">
-                                    <span>⭐ <?= number_format($teacher['rating'], 1) ?> (<?= $teacher['rating_count'] ?>)</span>
-                                    <span>📚 <?= $teacher['total_lessons'] ?> уроков</span>
-                                    <span>⏱️ <?= $teacher['experience_years'] ?> лет</span>
-                                </div>
-                            </div>
-                            
-                            <div class="teacher-actions">
-                                <div class="teacher-price">
-                                    <?= number_format($teacher['hourly_rate'], 0) ?> ₽ <span>/ час</span>
-                                </div>
-                                <button class="btn-book-now" onclick="window.location='teacher.php?id=<?= $teacher['id'] ?>'">
-                                    Подробнее
-                                </button>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                
-                <aside class="calendar-sidebar">
-                    <div class="calendar-card">
-                        <h3 class="calendar-title">📅 Расписание</h3>
-                        <div class="calendar-placeholder">
-                            <p style="font-size: 14px; margin-bottom: 8px;">Календарь в разработке</p>
-                            <p style="font-size: 12px;">Скоро здесь будет отображаться расписание</p>
-                        </div>
-                    </div>
-                </aside>
             </div>
         </div>
+    </header>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Teachers List -->
+        <div class="teachers-section">
+            <div class="section-header">
+                <h2 class="section-title">Репетиторы</h2>
+                <select class="sort-select" onchange="updateSort(this.value)">
+                    <option value="rating" <?= $sort === 'rating' ? 'selected' : '' ?>>По рейтингу</option>
+                    <option value="lessons" <?= $sort === 'lessons' ? 'selected' : '' ?>>По урокам</option>
+                    <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Новые</option>
+                </select>
+            </div>
+            
+            <?php if (empty($teachers)): ?>
+                <div class="teacher-card">
+                    <p style="padding: 20px; text-align: center; color: var(--text-secondary);">Репетиторы не найдены</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($teachers as $teacher): ?>
+                    <div class="teacher-card">
+                        <img src="<?= e($teacher['avatar']) ?>" alt="<?= e($teacher['name']) ?>" class="teacher-avatar">
+                        
+                        <div class="teacher-info">
+                            <h3 class="teacher-name"><?= e($teacher['name']) ?></h3>
+                            <div class="teacher-subject"><?= e($teacher['subject']) ?></div>
+                            <p class="teacher-desc"><?= e(mb_substr($teacher['description'], 0, 120)) ?>...</p>
+                            
+                            <div class="teacher-stats">
+                                <span>⭐ <?= number_format($teacher['rating'], 1) ?> (<?= $teacher['rating_count'] ?>)</span>
+                                <span>📚 <?= $teacher['total_lessons'] ?> уроков</span>
+                                <span>⏱️ <?= $teacher['experience_years'] ?> лет</span>
+                            </div>
+                        </div>
+                        
+                        <div class="teacher-actions">
+                            <div class="teacher-price">
+                                <?= number_format($teacher['hourly_rate'], 0) ?> ₽ <span>/ час</span>
+                            </div>
+                            <button class="btn-book-now" onclick="openBooking(<?= $teacher['id'] ?>)">
+                                Записаться
+                            </button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+        
+        <!-- Calendar Sidebar -->
+        <aside class="calendar-sidebar">
+            <div class="calendar-card">
+                <h3 class="calendar-title">📅 Расписание</h3>
+                <div class="calendar-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <p>Календарь в разработке</p>
+                    <p style="font-size: 13px; margin-top: 8px;">Скоро здесь будет отображаться расписание и свободные слоты</p>
+                </div>
+            </div>
+        </aside>
     </div>
     
     <script>
+        // User menu toggle
         function toggleUserMenu() {
-            document.getElementById('userDropdown').classList.toggle('show');
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
         }
         
+        // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const userMenu = document.querySelector('.user-menu');
             if (!userMenu.contains(e.target)) {
@@ -688,6 +669,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             }
         });
         
+        // Search
         let searchTimeout;
         document.getElementById('searchInput').addEventListener('input', function(e) {
             clearTimeout(searchTimeout);
@@ -698,10 +680,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             }, 500);
         });
         
+        // Sort
         function updateSort(value) {
             const params = new URLSearchParams(window.location.search);
             params.set('sort', value);
             window.location.href = '?' + params.toString();
+        }
+        
+        // Booking
+        function openBooking(teacherId) {
+            alert('Календарь бронирования - в разработке!');
+            // TODO: Открыть модальное окно с календарем
         }
     </script>
 </body>
