@@ -91,10 +91,10 @@
   --bg-secondary: #25252a;
   --bg-gradient: linear-gradient(135deg, #2d2d35 0%, #1a1a1f 100%);
   
-  /* Текст */
-  --text-primary: #FFFFFF;
+  /* Текст - ИСПРАВЛЕНО для темной темы */
+  --text-primary: #FFFFFF !important;
   --text-secondary: #AEAEB2;
-  --text-tertiary: #6E6E73;
+  --text-tertiary: #8E8E93;
   
   /* Границы */
   --border-color: rgba(255, 255, 255, 0.12);
@@ -114,11 +114,27 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg-gradient);
   background-attachment: fixed;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background var(--transition), color var(--transition);
+}
+
+/* Исправление для темной темы - все заголовки */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] div {
+  color: var(--text-primary);
 }
 
 /* ===============================================
