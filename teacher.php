@@ -569,9 +569,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_profile'])) {
         
         // Открыть календарь бронирования
         function openBooking() {
-            alert('Календарь бронирования - в разработке!');
-            // TODO: Открыть модальное окно с календарем
+            openBookingModal(<?= $teacher_id ?>);
         }
     </script>
+    
+    <?php include 'booking_modal.php'; ?>
 </body>
 </html>

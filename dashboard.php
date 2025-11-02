@@ -18,9 +18,8 @@ $stmt->execute([$user_id]);
 
 $theme = $user['theme'] ?? 'light';
 
-// Категории
+// Категории (без "Все")
 $categories = [
-    'all' => ['icon' => '🌟', 'name' => 'Все'],
     'languages' => ['icon' => '🌍', 'name' => 'Языки'],
     'programming' => ['icon' => '💻', 'name' => 'IT'],
     'design' => ['icon' => '🎨', 'name' => 'Дизайн'],
@@ -29,7 +28,7 @@ $categories = [
     'music' => ['icon' => '🎵', 'name' => 'Музыка']
 ];
 
-$category = $_GET['category'] ?? 'all';
+$category = $_GET['category'] ?? '';
 $search = $_GET['search'] ?? '';
 $sort = $_GET['sort'] ?? 'rating';
 
@@ -38,7 +37,7 @@ $query = "SELECT u.*, tp.*
           INNER JOIN teacher_profiles tp ON u.id = tp.user_id 
           WHERE tp.is_approved = 1 AND tp.status = 'active'";
 
-if ($category !== 'all') {
+if ($category) {
     $query .= " AND u.interests = :category";
 }
 
@@ -49,11 +48,13 @@ if ($search) {
 switch ($sort) {
     case 'lessons': $query .= " ORDER BY tp.total_lessons DESC"; break;
     case 'newest': $query .= " ORDER BY tp.created_at DESC"; break;
+    case 'price_low': $query .= " ORDER BY tp.hourly_rate ASC"; break;
+    case 'price_high': $query .= " ORDER BY tp.hourly_rate DESC"; break;
     default: $query .= " ORDER BY tp.rating DESC, tp.rating_count DESC";
 }
 
 $stmt = $pdo->prepare($query);
-if ($category !== 'all') $stmt->bindValue(':category', $category);
+if ($category) $stmt->bindValue(':category', $category);
 if ($search) $stmt->bindValue(':search', "%$search%");
 $stmt->execute();
 $teachers = $stmt->fetchAll();
@@ -112,29 +113,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
         }
         
         .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            display: inline-block;
             text-decoration: none;
         }
         
         .logo-img {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
         }
         
-        .logo-text {
-            font-size: 24px;
-            font-weight: 700;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* НАВИГАЦИЯ СВЕРХУ */
+        .sidebar-nav {
+            padding: 16px;
+            flex: 1;
         }
         
-        /* КАТЕГОРИИ В SIDEBAR */
+        /* КАТЕГОРИИ ВНИЗУ */
         .sidebar-categories {
             padding: 16px;
-            border-bottom: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-border);
         }
         
         .categories-title {
@@ -170,12 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             background: var(--gradient-glass);
             color: var(--primary);
             font-weight: 600;
-        }
-        
-        /* МЕНЮ НАВИГАЦИИ В SIDEBAR */
-        .sidebar-nav {
-            flex: 1;
-            padding: 16px;
         }
         
         .nav-title {
@@ -242,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
         
         .search-box {
             flex: 1;
-            max-width: 500px;
+            max-width: 800px;
             position: relative;
         }
         
@@ -261,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             width: 100%;
             padding: 12px 16px 12px 48px;
             border-radius: var(--radius-full);
-            background: var(--glass-bg-subtle);
+            background: transparent;
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
             font-size: 15px;
@@ -513,12 +504,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             }
         }
         
+        /* Mobile Bottom Nav */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur-strong));
+            -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+            border-top: 1px solid var(--glass-border);
+            padding: 12px 0;
+            z-index: 100;
+        }
+        
+        .bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+            transition: all var(--transition);
+        }
+        
+        .bottom-nav-item.active {
+            color: var(--primary);
+        }
+        
+        .bottom-nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+        
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
+                z-index: 200;
+                transition: transform var(--transition);
             }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
             .main-wrapper {
                 margin-left: 0;
+            }
+            
+            .content-wrapper {
+                padding-bottom: 80px;
+            }
+            
+            .bottom-nav {
+                display: block;
             }
         }
     </style>
@@ -526,27 +574,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
 <body>
     <div class="layout">
         <!-- SIDEBAR СЛЕВА -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <!-- Лого -->
             <div class="sidebar-logo">
                 <a href="dashboard.php" class="logo">
-                    <img src="img/logo-white.svg" alt="WayBels" class="logo-img">
-                    <span class="logo-text">WayBels</span>
+                    <img src="img/logo.svg" alt="WayBels" class="logo-img">
                 </a>
             </div>
             
-            <!-- КАТЕГОРИИ -->
-            <div class="sidebar-categories">
-                <div class="categories-title">Категории</div>
-                <?php foreach ($categories as $key => $cat): ?>
-                    <a href="?category=<?= $key ?>" class="category-link <?= $category === $key ? 'active' : '' ?>">
-                        <span><?= $cat['icon'] ?></span>
-                        <span><?= $cat['name'] ?></span>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-            
-            <!-- НАВИГАЦИЯ -->
+            <!-- НАВИГАЦИЯ СВЕРХУ -->
             <nav class="sidebar-nav">
                 <div class="nav-title">Меню</div>
                 
@@ -564,6 +600,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
                     <span>Сообщения</span>
                 </a>
             </nav>
+            
+            <!-- КАТЕГОРИИ ВНИЗУ -->
+            <div class="sidebar-categories">
+                <div class="categories-title">Категории</div>
+                <?php foreach ($categories as $key => $cat): ?>
+                    <a href="?category=<?= $key ?>" class="category-link <?= $category === $key ? 'active' : '' ?>">
+                        <span><?= $cat['icon'] ?></span>
+                        <span><?= $cat['name'] ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         </aside>
         
         <!-- MAIN CONTENT -->
@@ -631,6 +678,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
                         <select class="sort-select" onchange="updateSort(this.value)">
                             <option value="rating" <?= $sort === 'rating' ? 'selected' : '' ?>>По рейтингу</option>
                             <option value="lessons" <?= $sort === 'lessons' ? 'selected' : '' ?>>По урокам</option>
+                            <option value="price_low" <?= $sort === 'price_low' ? 'selected' : '' ?>>По цене (дешевле)</option>
+                            <option value="price_high" <?= $sort === 'price_high' ? 'selected' : '' ?>>По цене (дороже)</option>
                             <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Новые</option>
                         </select>
                     </div>
@@ -665,18 +714,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
                 
                 <aside class="calendar-sidebar">
                     <div class="calendar-card">
-                        <h3 class="calendar-title">📅 Расписание</h3>
-                        <div class="calendar-placeholder">
-                            <p style="font-size: 14px; margin-bottom: 8px;">Календарь в разработке</p>
-                            <p style="font-size: 12px;">Скоро здесь будет отображаться расписание</p>
-                        </div>
+                        <h3 class="calendar-title">📅 Ближайшие уроки</h3>
+                        <div id="upcomingLessons"></div>
+                    </div>
+                    
+                    <div class="calendar-card" style="margin-top: 16px;">
+                        <h3 class="calendar-title">💡 Совет дня</h3>
+                        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+                            Попробуйте заниматься регулярно — это эффективнее, чем длинные, но редкие уроки!
+                        </p>
                     </div>
                 </aside>
             </div>
         </div>
+        
+        <!-- Mobile Bottom Navigation -->
+        <nav class="bottom-nav">
+            <div class="bottom-nav-items">
+                <a href="dashboard.php" class="bottom-nav-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    </svg>
+                    <span>Главная</span>
+                </a>
+                
+                <a href="messages.php" class="bottom-nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Сообщения</span>
+                </a>
+                
+                <a href="profile.php" class="bottom-nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Профиль</span>
+                </a>
+                
+                <button class="bottom-nav-item" onclick="toggleSidebar()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                    <span>Меню</span>
+                </button>
+            </div>
+        </nav>
     </div>
     
     <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+        
         function toggleUserMenu() {
             document.getElementById('userDropdown').classList.toggle('show');
         }
@@ -704,5 +797,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
             window.location.href = '?' + params.toString();
         }
     </script>
+    <script src="js/calendar.js"></script>
 </body>
 </html>
