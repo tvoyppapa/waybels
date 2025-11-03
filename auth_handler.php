@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     // Регенерируем ID сессии для безопасности
                     session_regenerate_id(true);
                     
-                    redirect('dashboard.php');
+                    redirect('feed.php');
                 } else {
                     $error = "Неверный email или пароль";
                     saveOldInput(['email' => $email]);
@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     // Регенерируем ID сессии
                     session_regenerate_id(true);
                     
-                    redirect('dashboard.php');
+                    redirect('feed.php');
                 }
             } catch (PDOException $e) {
                 $error = "Ошибка регистрации. Попробуйте позже.";

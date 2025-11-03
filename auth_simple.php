@@ -100,7 +100,7 @@ if (isset($_POST['register'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход - WayBels</title>
+    <title>Вход - aqum</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style/auth.css">
 </head>
@@ -122,7 +122,7 @@ if (isset($_POST['register'])) {
     <!-- Левая часть -->
     <div class="auth-left">
         <div class="promo-content">
-            <img src="img/logo-white.svg" alt="WayBels" class="logo">
+            <img src="img/logo-white.svg" alt="aqum" class="logo">
         </div>
     </div>
     

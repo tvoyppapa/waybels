@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     // Регенерируем ID сессии
                     session_regenerate_id(true);
                     
-                    redirect('dashboard.php');
+                    redirect('feed.php');
                 }
             } catch (PDOException $e) {
                 $error = "Ошибка регистрации. Попробуйте позже.";
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация - WayBels</title>
+    <title>Регистрация - aqum</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style/auth.css">
 </head>
@@ -93,10 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- Левая часть -->
     <div class="auth-left">
         <div class="promo-content">
-            <img src="img/logo.svg" alt="WayBels" class="logo">
+            <img src="img/logo.svg" alt="aqum" class="logo">
             <div class="promo">
-                <h1>WayBels</h1>
-                <p>Пространство, где знание превращается в опыт</p>
+                <h1>aqum</h1>
+                <p>Образовательная платформа нового поколения</p>
             </div>
             
             <div class="features">

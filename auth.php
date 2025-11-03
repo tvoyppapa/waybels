@@ -9,22 +9,7 @@ require_once 'auth_handler.php';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Вход - WayBels</title>
-  
-  <!-- ОТЛАДКА -->
-  <style>
-    .debug-box {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #ff0;
-      border: 2px solid #f00;
-      padding: 10px;
-      z-index: 9999;
-      max-width: 300px;
-      font-size: 12px;
-    }
-  </style>
+  <title>Вход - aqum</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -34,25 +19,12 @@ require_once 'auth_handler.php';
 
 <div class="auth-container">
   
-  <!-- ОТЛАДКА -->
-  <div class="debug-box">
-    <strong>ОТЛАДКА:</strong><br>
-    <?php 
-    echo "REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD'] . "<br>";
-    echo "POST data: " . (empty($_POST) ? "ПУСТО" : "ЕСТЬ") . "<br>";
-    if (!empty($_POST)) {
-        echo "POST keys: " . implode(', ', array_keys($_POST)) . "<br>";
-    }
-    echo "Session interests: " . (isset($_SESSION['interests']) ? $_SESSION['interests'] : "НЕТ") . "<br>";
-    echo "Error: " . ($error ?? "НЕТ") . "<br>";
-    echo "Success: " . ($success ?? "НЕТ") . "<br>";
-    ?>
-  </div>
-  
   <!-- Левая часть с логотипом -->
   <div class="auth-left">
     <div class="promo-content">
-      <img src="img/logo-white.svg" alt="WayBels" class="logo">
+      <img src="img/logo-white.svg" alt="aqum" class="logo">
+      <h1 style="color: white; font-size: 48px; font-weight: 800; margin-top: 24px; letter-spacing: -1px;">aqum</h1>
+      <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-top: 12px;">Образовательная платформа нового поколения</p>
     </div>
   </div>
   
