@@ -7,10 +7,12 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Настройки сессии
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_samesite', 'Strict');
+// Настройки сессии (только если сессия еще не запущена)
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_samesite', 'Strict');
+}
 
 // Константы приложения
 define('APP_NAME', 'aqum');

@@ -232,11 +232,17 @@ document.addEventListener('DOMContentLoaded', function() {
   if (loginForm) {
     loginForm.addEventListener('submit', function(e) {
       const emailInput = this.querySelector('input[type="email"]');
+      const email = emailInput.value.trim();
       
-      if (!validateEmail(emailInput)) {
+      // Проверяем только если поле не пустое
+      if (email && !validateEmail(emailInput)) {
         e.preventDefault();
         emailInput.focus();
+        return false;
       }
+      
+      // Валидация прошла - форма отправится
+      return true;
     });
   }
   
@@ -247,25 +253,40 @@ document.addEventListener('DOMContentLoaded', function() {
       const passwordInput = this.querySelector('input[type="password"]');
       
       let isValid = true;
+      let firstInvalidField = null;
       
-      if (!validateName(nameInput)) {
-        isValid = false;
-        if (isValid) nameInput.focus();
+      // Проверяем имя
+      if (nameInput && nameInput.value.trim()) {
+        if (!validateName(nameInput)) {
+          isValid = false;
+          if (!firstInvalidField) firstInvalidField = nameInput;
+        }
       }
       
-      if (!validateEmail(emailInput)) {
-        isValid = false;
-        if (isValid) emailInput.focus();
+      // Проверяем email
+      if (emailInput && emailInput.value.trim()) {
+        if (!validateEmail(emailInput)) {
+          isValid = false;
+          if (!firstInvalidField) firstInvalidField = emailInput;
+        }
       }
       
-      if (!validatePassword(passwordInput)) {
-        isValid = false;
-        if (isValid) passwordInput.focus();
+      // Проверяем пароль
+      if (passwordInput && passwordInput.value) {
+        if (!validatePassword(passwordInput)) {
+          isValid = false;
+          if (!firstInvalidField) firstInvalidField = passwordInput;
+        }
       }
       
       if (!isValid) {
         e.preventDefault();
+        if (firstInvalidField) firstInvalidField.focus();
+        return false;
       }
+      
+      // Валидация прошла - форма отправится
+      return true;
     });
   }
   
