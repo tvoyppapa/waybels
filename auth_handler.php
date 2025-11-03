@@ -3,10 +3,6 @@
  * Логика аутентификации и регистрации
  */
 
-// ОТЛАДКА - удалить в продакшене
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once 'config.php';
 require_once 'db.php';
 require_once 'helpers.php';
@@ -21,12 +17,6 @@ $currentView = 'quiz'; // quiz, login, register
 // Определяем текущий вид
 if (isset($_SESSION['interests'])) {
     $currentView = 'login';
-}
-
-// ОТЛАДКА
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    error_log("POST получен в auth_handler.php");
-    error_log("POST data: " . print_r($_POST, true));
 }
 
 // Получаем flash сообщения
