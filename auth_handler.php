@@ -110,7 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         $errors = [];
         
         if (!validateName($name)) {
-            $errors[] = "Имя должно содержать минимум 2 символа";
+            $errors[] = "Имя должно содержать минимум 2 символа и только буквы (без цифр и символов)";
+        } else {
+            // Форматируем имя (первая буква заглавная)
+            $name = formatName($name);
         }
         
         if (!validateEmail($email)) {

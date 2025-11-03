@@ -44,7 +44,36 @@ function validatePassword(string $password): array {
  * Валидация имени
  */
 function validateName(string $name): bool {
-    return strlen(trim($name)) >= 2;
+    $name = trim($name);
+    
+    // Минимум 2 символа
+    if (strlen($name) < 2) {
+        return false;
+    }
+    
+    // Только буквы, пробелы и дефисы (без цифр, подчеркиваний, точек)
+    if (!preg_match('/^[а-яёА-ЯЁa-zA-Z\s\-]+$/u', $name)) {
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Форматирование имени (первая буква заглавная)
+ */
+function formatName(string $name): string {
+    $name = trim($name);
+    
+    // Разбиваем на слова
+    $words = preg_split('/\s+/u', $name);
+    
+    // Делаем первую букву каждого слова заглавной
+    $words = array_map(function($word) {
+        return mb_convert_case(mb_strtolower($word), MB_CASE_TITLE, 'UTF-8');
+    }, $words);
+    
+    return implode(' ', $words);
 }
 
 /**
@@ -58,6 +87,13 @@ function e(?string $string): string {
  * Редирект
  */
 function redirect(string $url): void {
+    // Если headers уже отправлены, используем JavaScript
+    if (headers_sent()) {
+        echo "<script>window.location.href='$url';</script>";
+        echo "<meta http-equiv='refresh' content='0;url=$url'>";
+        exit;
+    }
+    
     header("Location: $url");
     exit;
 }

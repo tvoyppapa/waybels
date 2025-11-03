@@ -134,28 +134,58 @@ document.addEventListener('DOMContentLoaded', function() {
   // Валидация имени
   const nameInput = document.getElementById('register-name');
   if (nameInput) {
-    nameInput.addEventListener('blur', function() {
-      validateName(this);
-    });
-    
+    // Запрет цифр и спецсимволов
     nameInput.addEventListener('input', function() {
+      // Удаляем цифры, подчеркивания, точки и спецсимволы
+      this.value = this.value.replace(/[0-9_\.@#$%^&*()+=\[\]{};:'",<>?\/\\|`~]/g, '');
+      
       if (this.classList.contains('error')) {
         this.classList.remove('error');
         removeErrorMessage(this);
       }
     });
+    
+    // Автоформатирование: первая буква заглавная
+    nameInput.addEventListener('blur', function() {
+      let name = this.value.trim();
+      
+      // Делаем первую букву каждого слова заглавной
+      if (name) {
+        name = name.split(/\s+/).map(word => {
+          if (word.length > 0) {
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          }
+          return word;
+        }).join(' ');
+        
+        this.value = name;
+      }
+      
+      validateName(this);
+    });
   }
   
   function validateName(input) {
     const name = input.value.trim();
+    const nameRegex = /^[а-яёА-ЯЁa-zA-Z\s\-]+$/;
     
-    if (name && name.length < 2) {
+    if (!name) {
+      showInputError(input, 'Введите имя');
+      return false;
+    }
+    
+    if (name.length < 2) {
       showInputError(input, 'Минимум 2 символа');
       return false;
-    } else {
-      removeInputError(input);
-      return true;
     }
+    
+    if (!nameRegex.test(name)) {
+      showInputError(input, 'Только буквы (без цифр и символов)');
+      return false;
+    }
+    
+    removeInputError(input);
+    return true;
   }
   
   // Показать ошибку поля
