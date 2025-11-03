@@ -1,13 +1,23 @@
 <?php
 /**
  * Логика аутентификации и регистрации
+ * ВАЖНО: Этот файл НЕ должен открываться напрямую!
  */
+
+// Защита от прямого доступа
+if (basename($_SERVER['PHP_SELF']) === 'auth_handler.php') {
+    header('Location: auth.php');
+    exit;
+}
 
 require_once 'config.php';
 require_once 'db.php';
 require_once 'helpers.php';
 
-session_start();
+// Не запускаем session_start если сессия уже запущена
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Инициализация переменных
 $error = null;
@@ -40,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['interests'])) {
         if (array_key_exists($interests, INTEREST_CATEGORIES)) {
             $_SESSION['interests'] = $interests;
             $currentView = 'login';
-            redirect($_SERVER['PHP_SELF']);
+            redirect('auth.php');
         } else {
             $error = "Неверная категория";
         }
@@ -188,5 +198,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
  */
 if (isset($_GET['reset'])) {
     unset($_SESSION['interests']);
-    redirect($_SERVER['PHP_SELF']);
+    redirect('auth.php');
 }

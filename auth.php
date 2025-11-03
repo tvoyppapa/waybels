@@ -2,6 +2,14 @@
 /**
  * Страница авторизации и регистрации
  */
+session_start();
+
+// Если уже авторизован - редирект
+if (isset($_SESSION['user_id'])) {
+    header('Location: feed.php');
+    exit;
+}
+
 require_once 'auth_handler.php';
 ?>
 <!DOCTYPE html>
@@ -36,13 +44,13 @@ require_once 'auth_handler.php';
         <h2>Что бы вы хотели изучать?</h2>
         <p class="subtitle">Выберите направление, которое вам интересно</p>
         
-        <?php if ($error): ?>
+        <?php if (isset($error) && $error): ?>
           <div class="alert alert-error" role="alert">
             <?= htmlspecialchars($error) ?>
           </div>
         <?php endif; ?>
         
-        <form method="POST" class="quiz-form" id="quiz-form">
+        <form method="POST" action="auth.php" class="quiz-form" id="quiz-form">
           <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCsrfToken()) ?>">
           
           <?php foreach (INTEREST_CATEGORIES as $key => $category): ?>
@@ -72,7 +80,7 @@ require_once 'auth_handler.php';
           <?php if (isset($_SESSION['interests'])): ?>
               <p class="selected-interest">
                 Выбрано: <strong><?= htmlspecialchars(INTEREST_CATEGORIES[$_SESSION['interests']]['name']) ?></strong>
-                <a href="?reset=1" class="reset-interest" title="Изменить выбор">×</a>
+                <a href="auth.php?reset=1" class="reset-interest" title="Изменить выбор">×</a>
               </p>
           <?php endif; ?>
         </div>
@@ -91,20 +99,20 @@ require_once 'auth_handler.php';
         <div class="divider"><span>или</span></div>
 
         <!-- Сообщения об ошибках/успехе -->
-        <?php if ($error): ?>
+        <?php if (isset($error) && $error): ?>
           <div class="alert alert-error" role="alert">
             <?= htmlspecialchars($error) ?>
           </div>
         <?php endif; ?>
         
-        <?php if ($success): ?>
+        <?php if (isset($success) && $success): ?>
           <div class="alert alert-success" role="alert">
             <?= htmlspecialchars($success) ?>
           </div>
         <?php endif; ?>
 
         <!-- Форма входа -->
-        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" id="login-form" class="auth-form">
+        <form method="POST" action="auth.php" id="login-form" class="auth-form">
           <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCsrfToken()) ?>">
           
           <div class="form-group">
@@ -145,7 +153,7 @@ require_once 'auth_handler.php';
         </form>
 
         <!-- Форма регистрации -->
-        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" id="register-form" class="auth-form" style="display:none;">
+        <form method="POST" action="auth.php" id="register-form" class="auth-form" style="display:none;">
           <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCsrfToken()) ?>">
           
           <h3 class="form-title">Регистрация</h3>
