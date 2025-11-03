@@ -13,12 +13,12 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_samesite', 'Strict');
 
 // Константы приложения
-define('APP_NAME', 'Wibs');
-define('APP_TAGLINE', 'Пространство, где знание превращается в опыт');
+define('APP_NAME', 'aqum');
+define('APP_TAGLINE', 'Образовательная платформа нового поколения');
 
 // Настройки базы данных
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'waybels_db');
+define('DB_NAME', 'aqum_db');
 define('DB_USER', 'root');
 define('DB_PASS', 'WayBels2553030App!');
 define('DB_CHARSET', 'utf8mb4');
@@ -33,4 +33,4 @@ define('INTEREST_CATEGORIES', [
 ]);
 
 // URL для редиректа после входа
-define('DASHBOARD_URL', 'dashboard.php');
+define('DASHBOARD_URL', 'feed.php');

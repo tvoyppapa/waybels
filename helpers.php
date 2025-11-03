@@ -101,3 +101,61 @@ function getFlashMessage(): ?array {
     }
     return null;
 }
+
+/**
+ * Форматирование времени "назад" (time ago)
+ */
+function timeAgo(string $datetime): string {
+    $timestamp = strtotime($datetime);
+    $diff = time() - $timestamp;
+    
+    if ($diff < 60) {
+        return 'только что';
+    }
+    
+    if ($diff < 3600) {
+        $minutes = floor($diff / 60);
+        return $minutes . ' ' . pluralize($minutes, 'минута', 'минуты', 'минут') . ' назад';
+    }
+    
+    if ($diff < 86400) {
+        $hours = floor($diff / 3600);
+        return $hours . ' ' . pluralize($hours, 'час', 'часа', 'часов') . ' назад';
+    }
+    
+    if ($diff < 604800) {
+        $days = floor($diff / 86400);
+        return $days . ' ' . pluralize($days, 'день', 'дня', 'дней') . ' назад';
+    }
+    
+    if ($diff < 2592000) {
+        $weeks = floor($diff / 604800);
+        return $weeks . ' ' . pluralize($weeks, 'неделя', 'недели', 'недель') . ' назад';
+    }
+    
+    if ($diff < 31536000) {
+        $months = floor($diff / 2592000);
+        return $months . ' ' . pluralize($months, 'месяц', 'месяца', 'месяцев') . ' назад';
+    }
+    
+    $years = floor($diff / 31536000);
+    return $years . ' ' . pluralize($years, 'год', 'года', 'лет') . ' назад';
+}
+
+/**
+ * Плюрализация русских слов
+ */
+function pluralize(int $number, string $one, string $few, string $many): string {
+    $mod10 = $number % 10;
+    $mod100 = $number % 100;
+    
+    if ($mod10 === 1 && $mod100 !== 11) {
+        return $one;
+    }
+    
+    if ($mod10 >= 2 && $mod10 <= 4 && ($mod100 < 10 || $mod100 >= 20)) {
+        return $few;
+    }
+    
+    return $many;
+}
