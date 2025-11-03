@@ -1,10 +1,7 @@
 <?php
-/**
- * Страница авторизации aqum
- */
 session_start();
 
-// Если уже авторизован - редирект на ленту
+// Если уже залогинен - на фид
 if (isset($_SESSION['user_id'])) {
     header('Location: feed.php');
     exit;
@@ -17,238 +14,224 @@ require_once 'helpers.php';
 $error = '';
 $success = '';
 
-// Сброс выбора интересов
-if (isset($_GET['reset'])) {
-    unset($_SESSION['interests']);
-    header('Location: auth.php');
-    exit;
-}
+// ==================================
+// ОБРАБОТКА ФОРМ
+// ==================================
 
-// === ОБРАБОТКА КВИЗА (выбор интересов) ===
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['interests'])) {
-    $interests = $_POST['interests'];
-    if (array_key_exists($interests, INTEREST_CATEGORIES)) {
-        $_SESSION['interests'] = $interests;
-        header('Location: auth.php');
-        exit;
-    }
-}
-
-// === ОБРАБОТКА ВХОДА ===
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    if (empty($email) || empty($password)) {
-        $error = "Заполните все поля";
-    } else {
-        try {
-            $stmt = $pdo->prepare("SELECT id, name, password, role FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch();
-            
-            if ($user && password_verify($password, $user['password'])) {
-                // Вход успешен
+    // === ВХОД ===
+    if (isset($_POST['login'])) {
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        
+        if (empty($email) || empty($password)) {
+            $error = 'Заполните все поля';
+        } else {
+            try {
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+                $stmt->execute([$email]);
+                $user = $stmt->fetch();
+                
+                if ($user && password_verify($password, $user['password'])) {
+                    // УСПЕХ!
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_name'] = $user['name'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_role'] = $user['role'];
+                    
+                    // Обновляем last_seen
+                    $pdo->prepare("UPDATE users SET last_seen_at = NOW() WHERE id = ?")->execute([$user['id']]);
+                    
+                    // РЕДИРЕКТ
+                    header('Location: feed.php');
+                    exit;
+                } else {
+                    $error = 'Неверный email или пароль';
+                }
+            } catch (PDOException $e) {
+                $error = 'Ошибка входа: ' . $e->getMessage();
+            }
+        }
+    }
+    
+    // === РЕГИСТРАЦИЯ ===
+    elseif (isset($_POST['register'])) {
+        $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $password_confirm = $_POST['password_confirm'] ?? '';
+        
+        if (empty($name) || empty($email) || empty($password)) {
+            $error = 'Заполните все поля';
+        } elseif ($password !== $password_confirm) {
+            $error = 'Пароли не совпадают';
+        } elseif (strlen($password) < 6) {
+            $error = 'Пароль должен быть минимум 6 символов';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Неверный формат email';
+        } else {
+            try {
+                // Проверяем email
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                $stmt->execute([$email]);
+                
+                if ($stmt->fetch()) {
+                    $error = 'Email уже зарегистрирован';
+                } else {
+                    // Форматируем имя
+                    $name = mb_convert_case(mb_strtolower($name), MB_CASE_TITLE, 'UTF-8');
+                    
+                    // Создаем пользователя
+                    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+                    
+                    $stmt = $pdo->prepare("
+                        INSERT INTO users (name, email, password, role, created_at) 
+                        VALUES (?, ?, ?, 'user', NOW())
+                    ");
+                    $stmt->execute([$name, $email, $hashedPassword]);
+                    
+                    // Показываем интересы
+                    $_SESSION['show_interests'] = true;
+                    $_SESSION['temp_user_id'] = $pdo->lastInsertId();
+                    
+                    $success = 'Регистрация успешна! Выберите интересы';
+                }
+            } catch (PDOException $e) {
+                $error = 'Ошибка регистрации: ' . $e->getMessage();
+            }
+        }
+    }
+    
+    // === ИНТЕРЕСЫ ===
+    elseif (isset($_POST['save_interests'])) {
+        $interest = $_POST['interest'] ?? '';
+        $userId = $_SESSION['temp_user_id'] ?? null;
+        
+        if ($userId && $interest) {
+            try {
+                $stmt = $pdo->prepare("UPDATE users SET interests = ? WHERE id = ?");
+                $stmt->execute([$interest, $userId]);
+                
+                // ЛОГИНИМ
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+                $stmt->execute([$userId]);
+                $user = $stmt->fetch();
+                
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_role'] = $user['role'];
                 
-                // Обновляем last_seen_at
-                $stmt = $pdo->prepare("UPDATE users SET last_seen_at = NOW() WHERE id = ?");
-                $stmt->execute([$user['id']]);
+                unset($_SESSION['show_interests']);
+                unset($_SESSION['temp_user_id']);
                 
-                // Очищаем interests
-                unset($_SESSION['interests']);
-                
-                // РЕДИРЕКТ НА ЛЕНТУ
                 header('Location: feed.php');
                 exit;
-            } else {
-                $error = "Неверный email или пароль";
+            } catch (PDOException $e) {
+                $error = 'Ошибка сохранения интересов';
             }
-        } catch (PDOException $e) {
-            $error = "Ошибка входа";
         }
     }
 }
 
-// === ОБРАБОТКА РЕГИСТРАЦИИ ===
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-    $interests = $_SESSION['interests'] ?? null;
-    
-    if (empty($name) || empty($email) || empty($password)) {
-        $error = "Заполните все поля";
-    } elseif (strlen($password) < 6) {
-        $error = "Пароль минимум 6 символов";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Неверный формат email";
-    } else {
-        // Форматируем имя
-        $name = ucwords(strtolower($name));
-        
-        try {
-            // Проверяем существование email
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            
-            if ($stmt->fetch()) {
-                $error = "Email уже зарегистрирован";
-            } else {
-                // Создаем пользователя
-                $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-                
-                if ($interests) {
-                    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, interests, role, created_at, last_seen_at) VALUES (?, ?, ?, ?, 'user', NOW(), NOW())");
-                    $stmt->execute([$name, $email, $hashedPassword, $interests]);
-                } else {
-                    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, created_at, last_seen_at) VALUES (?, ?, ?, 'user', NOW(), NOW())");
-                    $stmt->execute([$name, $email, $hashedPassword]);
-                }
-                
-                // Автовход после регистрации
-                $_SESSION['user_id'] = $pdo->lastInsertId();
-                $_SESSION['user_name'] = $name;
-                $_SESSION['user_role'] = 'user';
-                
-                // Очищаем interests
-                unset($_SESSION['interests']);
-                
-                // РЕДИРЕКТ НА ЛЕНТУ
-                header('Location: feed.php');
-                exit;
-            }
-        } catch (PDOException $e) {
-            $error = "Ошибка регистрации: " . $e->getMessage();
-        }
-    }
-}
+$showInterests = isset($_SESSION['show_interests']) && $_SESSION['show_interests'];
 ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Вход - aqum</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style/auth.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo APP_NAME; ?> - Вход</title>
+    <link rel="stylesheet" href="/style/auth.css">
 </head>
 <body>
-
-<div class="auth-container">
-  
-  <!-- Левая часть -->
-  <div class="auth-left">
-    <div class="promo-content">
-      <img src="img/logo-white.svg" alt="aqum" class="logo">
-      <h1 style="color: white; font-size: 48px; font-weight: 800; margin-top: 24px; letter-spacing: -1px;">aqum</h1>
-      <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-top: 12px;">Образовательная платформа нового поколения</p>
-    </div>
-  </div>
-  
-  <!-- Правая часть -->
-  <div class="auth-right">
-    <?php if (!isset($_SESSION['interests'])): ?>
-      <!-- Квиз выбора интересов -->
-      <div class="quiz-container">
-        <h2>Что бы вы хотели изучать?</h2>
-        <p class="subtitle">Выберите направление</p>
-        
-        <?php if ($error): ?>
-          <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
-        <?php endif; ?>
-        
-        <form method="POST" action="auth.php" class="quiz-form">
-          <?php foreach (INTEREST_CATEGORIES as $key => $category): ?>
-            <button type="submit" name="interests" value="<?= $key ?>" class="quiz-btn">
-              <span class="quiz-icon"><?= $category['icon'] ?></span>
-              <span class="quiz-name"><?= $category['name'] ?></span>
-            </button>
-          <?php endforeach; ?>
-        </form>
-        
-        <p class="switch-text" style="margin-top: 24px;">
-          <a href="index.php">← На главную</a>
-        </p>
-      </div>
-
-    <?php else: ?>
-      <!-- Форма входа/регистрации -->
-      <div class="form-container">
-        <div class="form-header">
-          <h2>Добро пожаловать</h2>
-          <p class="welcome-subtitle">Войдите или зарегистрируйтесь</p>
-          <p class="selected-interest">
-            Выбрано: <strong><?= INTEREST_CATEGORIES[$_SESSION['interests']]['name'] ?></strong>
-            <a href="auth.php?reset=1" class="reset-interest">×</a>
-          </p>
+    <div class="auth-container">
+        <div class="auth-logo">
+            <img src="/img/logo.svg" alt="<?php echo APP_NAME; ?>">
+            <h1><?php echo APP_NAME; ?></h1>
+            <p><?php echo APP_TAGLINE; ?></p>
         </div>
 
         <?php if ($error): ?>
-          <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
+            <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
         
         <?php if ($success): ?>
-          <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+            <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
 
-        <!-- Форма входа -->
-        <form method="POST" action="auth.php" id="login-form" class="auth-form">
-          <div class="form-group">
-            <label for="login-email">Email</label>
-            <input type="email" id="login-email" name="email" placeholder="test@test.com" required autocomplete="email">
-          </div>
-          
-          <div class="form-group">
-            <label for="login-password">Пароль</label>
-            <input type="password" id="login-password" name="password" placeholder="password" required autocomplete="current-password">
-          </div>
-          
-          <button type="submit" name="login" class="btn-primary">Войти</button>
+        <?php if ($showInterests): ?>
+            <!-- ИНТЕРЕСЫ -->
+            <form method="POST" class="auth-form">
+                <h2>Выберите ваши интересы</h2>
+                <div class="interests-grid">
+                    <?php foreach (INTEREST_CATEGORIES as $key => $label): ?>
+                        <label class="interest-card">
+                            <input type="radio" name="interest" value="<?php echo $key; ?>" required>
+                            <span><?php echo $label; ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <button type="submit" name="save_interests" class="btn btn-primary">Продолжить</button>
+            </form>
+        <?php else: ?>
+            <!-- ВХОД -->
+            <form method="POST" id="login-form" class="auth-form active">
+                <h2>Вход</h2>
+                <div class="form-group">
+                    <input type="email" name="email" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" name="password" placeholder="Пароль" required>
+                </div>
+                <button type="submit" name="login" class="btn btn-primary">Войти</button>
+                <p class="auth-switch">
+                    Нет аккаунта? <a href="#" onclick="showRegister(); return false;">Регистрация</a>
+                </p>
+            </form>
 
-          <p class="switch-text">
-            Нет аккаунта? <a href="#" id="show-register">Зарегистрироваться</a>
-          </p>
-        </form>
+            <!-- РЕГИСТРАЦИЯ -->
+            <form method="POST" id="register-form" class="auth-form" style="display: none;">
+                <h2>Регистрация</h2>
+                <div class="form-group">
+                    <input type="text" name="name" id="register-name" placeholder="Имя Фамилия" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" name="email" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" name="password" placeholder="Пароль (минимум 6 символов)" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" name="password_confirm" placeholder="Повторите пароль" required>
+                </div>
+                <button type="submit" name="register" class="btn btn-primary">Зарегистрироваться</button>
+                <p class="auth-switch">
+                    Уже есть аккаунт? <a href="#" onclick="showLogin(); return false;">Вход</a>
+                </p>
+            </form>
+        <?php endif; ?>
+    </div>
 
-        <!-- Форма регистрации -->
-        <form method="POST" action="auth.php" id="register-form" class="auth-form" style="display:none;">
-          <h3 class="form-title">Регистрация</h3>
-          
-          <div class="form-group">
-            <label for="register-name">Имя *</label>
-            <input type="text" id="register-name" name="name" placeholder="Ваше имя" required minlength="2">
-          </div>
-          
-          <div class="form-group">
-            <label for="register-email">Email *</label>
-            <input type="email" id="register-email" name="email" placeholder="your@email.com" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="register-password">Пароль *</label>
-            <input type="password" id="register-password" name="password" placeholder="Минимум 6 символов" required minlength="6">
-            <small class="form-hint">Минимум 6 символов</small>
-          </div>
-          
-          <button type="submit" name="register" class="btn-primary">
-            <span>Зарегистрироваться</span>
-          </button>
-          
-          <p class="switch-text">
-            Уже есть аккаунт? <a href="#" id="show-login">Войти</a>
-          </p>
-        </form>
-      </div>
-    <?php endif; ?>
-  </div>
-</div>
-
-<script src="js/auth.js"></script>
-
+    <script>
+        function showRegister() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        }
+        
+        function showLogin() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        }
+        
+        // Очистка имени от цифр
+        const nameInput = document.getElementById('register-name');
+        if (nameInput) {
+            nameInput.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[0-9_\.@#$%^&*()+=\[\]{};:'",<>?\/\\|`~]/g, '');
+            });
+        }
+    </script>
 </body>
 </html>
