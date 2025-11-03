@@ -27,11 +27,18 @@ define('DB_CHARSET', 'utf8mb4');
 
 // Доступные категории интересов
 define('INTEREST_CATEGORIES', [
-    'languages' => 'Языки',
-    'programming' => 'Программирование',
-    'design' => 'Дизайн',
-    'marketing' => 'Маркетинг',
-    'growth' => 'Личностный рост'
+    'languages' => ['name' => 'Языки', 'icon' => '🌍'],
+    'programming' => ['name' => 'Программирование', 'icon' => '💻'],
+    'design' => ['name' => 'Дизайн', 'icon' => '🎨'],
+    'marketing' => ['name' => 'Маркетинг', 'icon' => '📈'],
+    'growth' => ['name' => 'Личностный рост', 'icon' => '🌱'],
+    'business' => ['name' => 'Бизнес', 'icon' => '💼'],
+    'music' => ['name' => 'Музыка', 'icon' => '🎵'],
+    'sports' => ['name' => 'Спорт', 'icon' => '⚽'],
+    'science' => ['name' => 'Наука', 'icon' => '🔬'],
+    'teaching' => ['name' => 'Преподавание', 'icon' => '👨‍🏫'],
+    'photography' => ['name' => 'Фотография', 'icon' => '📸'],
+    'cooking' => ['name' => 'Кулинария', 'icon' => '👨‍🍳']
 ]);
 
 // URL для редиректа после входа

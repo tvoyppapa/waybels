@@ -20,12 +20,15 @@ CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     nickname VARCHAR(50) NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NULL UNIQUE,
+    phone VARCHAR(20) NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    interests VARCHAR(50) NULL,
+    age INT NULL,
+    interests TEXT NULL,
     role VARCHAR(20) DEFAULT 'user',
     avatar VARCHAR(255) DEFAULT '/img/default-avatar.png',
     bio TEXT NULL,
+    google_id VARCHAR(255) NULL UNIQUE,
     last_seen_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -114,11 +117,11 @@ CREATE TABLE user_interactions (
 -- Пароль для всех: password
 -- Хеш: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
 
-INSERT INTO users (name, nickname, email, password, interests, role, last_seen_at) VALUES
-('Тест Юзер', 'test', 'test@test.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'programming', 'user', NOW()),
-('Иван Петров', 'ivan', 'ivan@aqum.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'languages', 'teacher', NOW()),
-('Мария Смирнова', 'maria', 'maria@aqum.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'programming', 'teacher', NOW()),
-('Админ', 'admin', 'admin@aqum.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'programming', 'admin', NOW());
+INSERT INTO users (name, nickname, email, phone, password, age, interests, role, last_seen_at) VALUES
+('Тест Юзер', 'test', 'test@test.com', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 25, 'programming,design', 'user', NOW()),
+('Иван Петров', 'ivan', 'ivan@aqum.com', '+79991234567', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 32, 'languages,teaching', 'teacher', NOW()),
+('Мария Смирнова', 'maria', 'maria@aqum.com', '+79997654321', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 28, 'programming,teaching', 'teacher', NOW()),
+('Админ', 'admin', 'admin@aqum.com', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 30, 'programming,management', 'admin', NOW());
 
 -- Репетиторы
 INSERT INTO teacher_profiles (user_id, subject, description, short_description, experience_years, hourly_rate, rating, rating_count, total_lessons, total_students, status, is_approved) VALUES
