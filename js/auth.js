@@ -28,17 +28,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ==========================================
-    // ПЕРЕКЛЮЧАТЕЛЬ EMAIL/PHONE
+    // ПЕРЕКЛЮЧАТЕЛЬ EMAIL/PHONE (МАЛЕНЬКИЕ ССЫЛКИ)
     // ==========================================
     
-    const switchButtons = document.querySelectorAll('.switch-btn');
+    const toggleLinks = document.querySelectorAll('.input-type-toggle a');
     const loginTypeInput = document.getElementById('login-type');
     const registerLoginInput = document.getElementById('register-login');
     
-    switchButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
+    toggleLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
             // Убираем active у всех
-            switchButtons.forEach(b => b.classList.remove('active'));
+            toggleLinks.forEach(l => l.classList.remove('active'));
             // Добавляем active текущей
             this.classList.add('active');
             
@@ -47,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 loginTypeInput.value = type;
             }
             
-            // Меняем placeholder
+            // Меняем placeholder и тип
             if (registerLoginInput) {
                 if (type === 'email') {
                     registerLoginInput.placeholder = 'example@mail.com';
@@ -57,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     registerLoginInput.type = 'tel';
                 }
                 registerLoginInput.value = '';
-                registerLoginInput.focus();
             }
         });
     });
@@ -132,7 +133,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const interestsForm = document.querySelector('form:has(input[name="interests[]"])');
     if (interestsForm) {
         const checkboxes = interestsForm.querySelectorAll('input[name="interests[]"]');
-        const submitBtn = interestsForm.querySelector('button[name="register_step3"]');
         
         interestsForm.addEventListener('submit', function(e) {
             const checked = Array.from(checkboxes).filter(cb => cb.checked);

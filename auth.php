@@ -45,12 +45,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (empty($user['interests'])) {
                         $_SESSION['registration_step'] = 'interests';
                         $_SESSION['show_onboarding'] = true;
+                        header('Location: auth.php');
+                        exit;
                     } else {
                         header('Location: feed.php');
                         exit;
                     }
                 } else {
-                    $error = 'Неверные данные для входа';
+                    $error = 'Неверный email/телефон или пароль';
                 }
             } catch (PDOException $e) {
                 $error = 'Ошибка: ' . $e->getMessage();
@@ -90,7 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'password' => password_hash($password, PASSWORD_BCRYPT)
                         ];
                         $_SESSION['registration_step'] = 'age';
-                        $success = 'Отлично! Укажите ваш возраст';
+                        header('Location: auth.php');
+                        exit;
                     }
                 }
             } catch (PDOException $e) {
@@ -108,7 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['registration_data']['age'] = $age;
             $_SESSION['registration_step'] = 'interests';
-            $success = 'Теперь выберите интересы';
+            header('Location: auth.php');
+            exit;
         }
     }
     
@@ -169,6 +173,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
+
+// Обновляем текущий шаг после обработки
+$currentStep = $_SESSION['registration_step'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -179,141 +186,156 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="/style/auth.css">
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            
-            <div class="auth-logo">
-                <img src="/img/logo.svg" alt="<?php echo APP_NAME; ?>">
-            </div>
+    <div class="auth-wrapper">
+        <!-- ЛЕВАЯ ПАНЕЛЬ С ИЛЛЮСТРАЦИЕЙ -->
+        <div class="auth-left">
+            <img src="/img/auth.png" alt="Иллюстрация" class="auth-illustration">
+        </div>
 
-            <?php if ($error): ?>
-                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
-            
-            <?php if ($success): ?>
-                <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
-            <?php endif; ?>
+        <!-- ПРАВАЯ ПАНЕЛЬ С ФОРМАМИ -->
+        <div class="auth-right">
+            <div class="auth-content">
+                
+                <div class="auth-logo">
+                    <img src="/img/logo.svg" alt="<?php echo APP_NAME; ?>">
+                    <h1><?php echo APP_NAME; ?></h1>
+                </div>
 
-            <?php if ($currentStep === 'age'): ?>
-                <!-- ШАГ 2: ВОЗРАСТ -->
-                <form method="POST" class="auth-form">
-                    <h2>Ваш возраст</h2>
-                    <p class="subtitle">Это поможет персонализировать контент</p>
-                    <div class="progress-steps">
-                        <span class="step done">1</span>
-                        <span class="step active">2</span>
-                        <span class="step">3</span>
-                    </div>
+                <?php if ($error): ?>
+                    <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
+                
+                <?php if ($success): ?>
+                    <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
+                <?php endif; ?>
 
-                    <div class="form-group">
-                        <input type="number" name="age" min="13" max="100" placeholder="Возраст" required autofocus>
-                    </div>
+                <?php if ($currentStep === 'age'): ?>
+                    <!-- ШАГ 2: ВОЗРАСТ -->
+                    <form method="POST" class="auth-form">
+                        <h2>Ваш возраст</h2>
+                        <p class="subtitle">Укажите ваш возраст для персонализации</p>
+                        <div class="progress-steps">
+                            <span class="step done">1</span>
+                            <span class="step active">2</span>
+                            <span class="step">3</span>
+                        </div>
 
-                    <button type="submit" name="register_step2" class="btn btn-primary">Продолжить</button>
-                </form>
+                        <div class="form-group">
+                            <input type="number" name="age" min="13" max="100" placeholder="Ваш возраст" required autofocus>
+                        </div>
 
-            <?php elseif ($currentStep === 'interests'): ?>
-                <!-- ШАГ 3: ИНТЕРЕСЫ -->
-                <form method="POST" class="auth-form">
-                    <h2>Выберите интересы</h2>
-                    <p class="subtitle">Можно выбрать несколько</p>
-                    <div class="progress-steps">
-                        <span class="step done">1</span>
-                        <span class="step done">2</span>
-                        <span class="step active">3</span>
-                    </div>
+                        <button type="submit" name="register_step2" class="btn btn-primary">Продолжить</button>
+                    </form>
 
-                    <div class="interests-grid">
-                        <?php foreach (INTEREST_CATEGORIES as $key => $data): ?>
-                            <label class="interest-item">
-                                <input type="checkbox" name="interests[]" value="<?php echo $key; ?>">
-                                <span class="interest-box">
-                                    <span class="icon"><?php echo $data['icon']; ?></span>
-                                    <span class="name"><?php echo $data['name']; ?></span>
+                <?php elseif ($currentStep === 'interests'): ?>
+                    <!-- ШАГ 3: ИНТЕРЕСЫ -->
+                    <form method="POST" class="auth-form">
+                        <h2>Выберите интересы</h2>
+                        <p class="subtitle">Это поможет подобрать лучший контент</p>
+                        <div class="progress-steps">
+                            <span class="step done">1</span>
+                            <span class="step done">2</span>
+                            <span class="step active">3</span>
+                        </div>
+
+                        <div class="interests-grid">
+                            <?php foreach (INTEREST_CATEGORIES as $key => $data): ?>
+                                <label class="interest-item">
+                                    <input type="checkbox" name="interests[]" value="<?php echo $key; ?>">
+                                    <span class="interest-box">
+                                        <span class="icon"><?php echo $data['icon']; ?></span>
+                                        <span class="name"><?php echo $data['name']; ?></span>
+                                    </span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <button type="submit" name="register_step3" class="btn btn-primary">Начать 🚀</button>
+                        <?php if (isset($_SESSION['show_onboarding'])): ?>
+                            <button type="submit" name="skip_interests" class="btn btn-link">Пропустить</button>
+                        <?php endif; ?>
+                    </form>
+
+                <?php else: ?>
+                    <!-- ВХОД -->
+                    <form method="POST" id="login-form" class="auth-form active">
+                        <h2>Вход в аккаунт</h2>
+                        <p class="subtitle">Введите свои данные для входа</p>
+
+                        <div class="form-group">
+                            <label>Email или номер телефона</label>
+                            <input type="text" name="login" placeholder="Введите email или телефон" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Пароль</label>
+                            <input type="password" name="password" placeholder="Введите пароль" required>
+                        </div>
+
+                        <button type="submit" name="login" class="btn btn-primary">Войти</button>
+                    
+                        <div class="divider">или войдите с помощью</div>
+                        
+                        <button type="button" class="btn btn-google" onclick="alert('Скоро!')">
+                            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                            Войти через Google
+                        </button>
+
+                        <p class="auth-footer">
+                            Нет аккаунта? <a href="#" onclick="showRegister(); return false;">Зарегистрироваться</a>
+                        </p>
+                    </form>
+
+                    <!-- РЕГИСТРАЦИЯ ШАГ 1 -->
+                    <form method="POST" id="register-form" class="auth-form">
+                        <h2>Создать аккаунт</h2>
+                        <p class="subtitle">Заполните данные для регистрации</p>
+                        <div class="progress-steps">
+                            <span class="step active">1</span>
+                            <span class="step">2</span>
+                            <span class="step">3</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Имя и фамилия</label>
+                            <input type="text" name="name" id="register-name" placeholder="Иван Петров" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                Email или номер телефона
+                                <span class="input-type-toggle">
+                                    <a href="#" class="active" data-type="email">Email</a>
+                                    <span class="separator">|</span>
+                                    <a href="#" data-type="phone">Телефон</a>
                                 </span>
                             </label>
-                        <?php endforeach; ?>
-                    </div>
+                            <input type="text" name="login" id="register-login" placeholder="example@mail.com" required>
+                            <input type="hidden" name="login_type" id="login-type" value="email">
+                        </div>
 
-                    <button type="submit" name="register_step3" class="btn btn-primary">Начать 🚀</button>
-                    <?php if (isset($_SESSION['show_onboarding'])): ?>
-                        <button type="submit" name="skip_interests" class="btn btn-link">Пропустить</button>
-                    <?php endif; ?>
-                </form>
+                        <div class="form-group">
+                            <label>Пароль</label>
+                            <input type="password" name="password" placeholder="Минимум 6 символов" required>
+                        </div>
 
-            <?php else: ?>
-                <!-- ВХОД -->
-                <form method="POST" id="login-form" class="auth-form active">
-                    <h2>Вход</h2>
-                    <p class="subtitle">Рады видеть вас снова!</p>
+                        <button type="submit" name="register_step1" class="btn btn-primary">Продолжить</button>
+                        
+                        <div class="divider">или зарегистрируйтесь с помощью</div>
+                        
+                        <button type="button" class="btn btn-google" onclick="alert('Скоро!')">
+                            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                            Регистрация через Google
+                        </button>
 
-                    <div class="form-group">
-                        <input type="text" name="login" placeholder="Email или телефон" required>
-                    </div>
+                        <p class="auth-footer">
+                            Есть аккаунт? <a href="#" onclick="showLogin(); return false;">Войти</a><br>
+                            <small>Репетитор? <a href="teacher_register.php">Регистрация для репетиторов</a></small>
+                        </p>
+                    </form>
+                <?php endif; ?>
 
-                    <div class="form-group">
-                        <input type="password" name="password" placeholder="Пароль" required>
-                    </div>
-
-                    <button type="submit" name="login" class="btn btn-primary">Войти</button>
-                    
-                    <div class="divider">или</div>
-                    
-                    <button type="button" class="btn btn-google" onclick="alert('Скоро!')">
-                        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
-                        Войти через Google
-                    </button>
-
-                    <p class="auth-footer">
-                        Нет аккаунта? <a href="#" onclick="showRegister(); return false;">Зарегистрироваться</a>
-                    </p>
-                </form>
-
-                <!-- РЕГИСТРАЦИЯ ШАГ 1 -->
-                <form method="POST" id="register-form" class="auth-form">
-                    <h2>Регистрация</h2>
-                    <p class="subtitle">Начните обучение сегодня</p>
-                    <div class="progress-steps">
-                        <span class="step active">1</span>
-                        <span class="step">2</span>
-                        <span class="step">3</span>
-                    </div>
-
-                    <div class="form-group">
-                        <input type="text" name="name" id="register-name" placeholder="Ваше имя" required>
-                    </div>
-
-                    <!-- ПЕРЕКЛЮЧАТЕЛЬ EMAIL/PHONE -->
-                    <div class="login-type-switch">
-                        <button type="button" class="switch-btn active" data-type="email">Email</button>
-                        <button type="button" class="switch-btn" data-type="phone">Телефон</button>
-                    </div>
-                    <input type="hidden" name="login_type" id="login-type" value="email">
-
-                    <div class="form-group">
-                        <input type="text" name="login" id="register-login" placeholder="example@mail.com" required>
-                    </div>
-
-                    <div class="form-group">
-                        <input type="password" name="password" placeholder="Пароль (мин. 6 символов)" required>
-                    </div>
-
-                    <button type="submit" name="register_step1" class="btn btn-primary">Продолжить</button>
-                    
-                    <div class="divider">или</div>
-                    
-                    <button type="button" class="btn btn-google" onclick="alert('Скоро!')">
-                        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
-                        Регистрация через Google
-                    </button>
-
-                    <p class="auth-footer">
-                        Есть аккаунт? <a href="#" onclick="showLogin(); return false;">Войти</a><br>
-                        Репетитор? <a href="teacher_register.php">Регистрация для репетиторов</a>
-                    </p>
-                </form>
-            <?php endif; ?>
-
+            </div>
         </div>
     </div>
 
