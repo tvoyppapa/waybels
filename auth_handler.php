@@ -88,7 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 }
             } catch (PDOException $e) {
                 $error = "Ошибка входа. Попробуйте позже.";
-                error_log("Login error: " . $e->getMessage());
             }
         }
     }
@@ -176,7 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 }
             } catch (PDOException $e) {
                 $error = "Ошибка регистрации. Попробуйте позже.";
-                error_log("Registration error: " . $e->getMessage());
             }
         }
     }
