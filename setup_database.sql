@@ -1,15 +1,14 @@
 -- ===============================================
--- Скрипт настройки базы данных WayBels
--- Удаляет старую БД aqum_db и создает новую waybels_db
+-- Скрипт настройки базы данных AQUM
+-- Удаляет старую БД aqum_db и создает новую aqum_db
 -- ===============================================
 
--- Удаляем старые базы данных
+-- Удаляем старую базу данных
 DROP DATABASE IF EXISTS `aqum_db`;
-DROP DATABASE IF EXISTS `waybels_db`;
 
 -- Создаем новую базу данных
-CREATE DATABASE `waybels_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `waybels_db`;
+CREATE DATABASE `aqum_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `aqum_db`;
 
 -- ===============================================
 -- Таблица пользователей (обновленная)
@@ -170,7 +169,7 @@ INSERT INTO users (name, email, password, username, interests, role, is_verified
 ('Елена Волкова', 'elena@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'elena_design', 'design', 'teacher', TRUE, '/img/default-avatar.png'),
 ('Сергей Новиков', 'sergey@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'sergey_code', 'programming', 'teacher', TRUE, '/img/default-avatar.png'),
 ('Мария Иванова', 'maria@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'maria_music', 'music', 'teacher', TRUE, '/img/default-avatar.png'),
-('Админ', 'admin@waybels.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', NULL, 'admin', TRUE, '/img/default-avatar.png');
+('Админ', 'admin@aqum.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', NULL, 'admin', TRUE, '/img/default-avatar.png');
 
 -- Профили репетиторов
 INSERT INTO teacher_profiles (user_id, subject, description, experience_years, hourly_rate, video_url, total_lessons, rating, rating_count, is_approved, status) VALUES

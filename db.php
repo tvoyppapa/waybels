@@ -4,7 +4,7 @@
  */
 
 $host = "localhost";
-$dbname = "waybels_db";
+$dbname = "aqum_db";
 $username = "root";
 $password = "WayBels2553030App!";
 

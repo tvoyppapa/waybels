@@ -1,6 +1,6 @@
 <?php
 /**
- * Веб-интерфейс для настройки базы данных WayBels
+ * Веб-интерфейс для настройки базы данных AQUM
  * Откройте этот файл в браузере для автоматической настройки БД
  */
 
@@ -18,7 +18,7 @@ $password = "WayBels2553030App!";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Настройка БД WayBels</title>
+    <title>Настройка БД AQUM</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -78,7 +78,7 @@ $password = "WayBels2553030App!";
 </head>
 <body>
     <div class="container">
-        <h1>🔧 Настройка базы данных WayBels</h1>
+        <h1>🔧 Настройка базы данных AQUM</h1>
         
         <?php
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['setup'])) {
@@ -91,27 +91,23 @@ $password = "WayBels2553030App!";
                 
                 echo "<span class='success'>✅ Подключение к MySQL успешно</span>\n\n";
                 
-                // Список БД для удаления
-                $databasesToDrop = ['aqum_db', 'waybels_db'];
-                
-                foreach ($databasesToDrop as $dbName) {
-                    try {
-                        $pdo->exec("DROP DATABASE IF EXISTS `$dbName`");
-                        echo "<span class='info'>✅ База данных '$dbName' удалена (если существовала)</span>\n";
-                    } catch (PDOException $e) {
-                        echo "<span class='warning'>⚠️  Не удалось удалить '$dbName': " . $e->getMessage() . "</span>\n";
-                    }
+                // Удаляем старую БД aqum_db
+                try {
+                    $pdo->exec("DROP DATABASE IF EXISTS `aqum_db`");
+                    echo "<span class='info'>✅ База данных 'aqum_db' удалена (если существовала)</span>\n";
+                } catch (PDOException $e) {
+                    echo "<span class='warning'>⚠️  Не удалось удалить 'aqum_db': " . $e->getMessage() . "</span>\n";
                 }
                 
                 echo "\n";
                 
-                // Создаем новую БД waybels_db
-                $pdo->exec("CREATE DATABASE IF NOT EXISTS `waybels_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-                echo "<span class='success'>✅ База данных 'waybels_db' создана</span>\n\n";
+                // Создаем новую БД aqum_db
+                $pdo->exec("CREATE DATABASE IF NOT EXISTS `aqum_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                echo "<span class='success'>✅ База данных 'aqum_db' создана</span>\n\n";
                 
                 // Выбираем БД
-                $pdo->exec("USE `waybels_db`");
-                echo "<span class='success'>✅ Переключились на БД 'waybels_db'</span>\n\n";
+                $pdo->exec("USE `aqum_db`");
+                echo "<span class='success'>✅ Переключились на БД 'aqum_db'</span>\n\n";
                 
                 // Читаем SQL файл
                 $sqlFile = __DIR__ . '/setup_database.sql';
@@ -204,8 +200,7 @@ $password = "WayBels2553030App!";
             <p>Этот скрипт выполнит следующее:</p>
             <ul>
                 <li>❌ Удалит старую базу данных <code>aqum_db</code> (если существует)</li>
-                <li>❌ Удалит старую базу данных <code>waybels_db</code> (если существует)</li>
-                <li>✅ Создаст новую базу данных <code>waybels_db</code></li>
+                <li>✅ Создаст новую базу данных <code>aqum_db</code></li>
                 <li>✅ Создаст все необходимые таблицы</li>
                 <li>✅ Загрузит тестовые данные</li>
             </ul>
@@ -232,30 +227,29 @@ $password = "WayBels2553030App!";
                 echo "<ul>";
                 foreach ($databases as $db) {
                     if (in_array($db, ['aqum_db', 'waybels_db', 'wibs'])) {
-                        $marker = in_array($db, ['aqum_db']) ? '❌' : '✅';
-                        echo "<li>$marker <code>$db</code></li>";
+                        echo "<li><code>$db</code></li>";
                     }
                 }
                 echo "</ul>";
                 
-                // Проверяем waybels_db
-                if (in_array('waybels_db', $databases)) {
-                    $pdo->exec("USE `waybels_db`");
+                // Проверяем aqum_db
+                if (in_array('aqum_db', $databases)) {
+                    $pdo->exec("USE `aqum_db`");
                     $stmt = $pdo->query("SHOW TABLES");
                     $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
                     
                     if (count($tables) > 0) {
-                        echo "<p><strong>Таблицы в waybels_db:</strong></p>";
+                        echo "<p><strong>Таблицы в aqum_db:</strong></p>";
                         echo "<ul>";
                         foreach ($tables as $table) {
                             echo "<li>✅ <code>$table</code></li>";
                         }
                         echo "</ul>";
                     } else {
-                        echo "<p class='warning'>⚠️ База данных waybels_db существует, но таблиц нет!</p>";
+                        echo "<p class='warning'>⚠️ База данных aqum_db существует, но таблиц нет!</p>";
                     }
                 } else {
-                    echo "<p class='info'>ℹ️ База данных waybels_db не существует. Нажмите кнопку выше для создания.</p>";
+                    echo "<p class='info'>ℹ️ База данных aqum_db не существует. Нажмите кнопку выше для создания.</p>";
                 }
                 
             } catch (PDOException $e) {

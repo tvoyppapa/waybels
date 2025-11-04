@@ -1,7 +1,7 @@
 <?php
 /**
- * Скрипт для настройки базы данных WayBels
- * Удаляет старую БД aqum_db и создает новую waybels_db
+ * Скрипт для настройки базы данных AQUM
+ * Удаляет старую БД aqum_db и создает новую aqum_db
  */
 
 error_reporting(E_ALL);
@@ -12,7 +12,7 @@ $host = "localhost";
 $username = "root";
 $password = "WayBels2553030App!";
 
-echo "<h1>Настройка базы данных WayBels</h1>";
+echo "<h1>Настройка базы данных AQUM</h1>";
 echo "<pre>";
 
 try {
@@ -22,30 +22,26 @@ try {
     
     echo "✅ Подключение к MySQL успешно\n\n";
     
-    // Список БД для удаления
-    $databasesToDrop = ['aqum_db', 'waybels_db'];
-    
-    foreach ($databasesToDrop as $dbName) {
-        try {
-            $pdo->exec("DROP DATABASE IF EXISTS `$dbName`");
-            echo "✅ База данных '$dbName' удалена (если существовала)\n";
-        } catch (PDOException $e) {
-            echo "⚠️  Не удалось удалить '$dbName': " . $e->getMessage() . "\n";
-        }
+    // Удаляем старую БД aqum_db
+    try {
+        $pdo->exec("DROP DATABASE IF EXISTS `aqum_db`");
+        echo "✅ База данных 'aqum_db' удалена (если существовала)\n";
+    } catch (PDOException $e) {
+        echo "⚠️  Не удалось удалить 'aqum_db': " . $e->getMessage() . "\n";
     }
     
     echo "\n";
     
-    // Создаем новую БД waybels_db
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS `waybels_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-    echo "✅ База данных 'waybels_db' создана\n\n";
+    // Создаем новую БД aqum_db
+    $pdo->exec("CREATE DATABASE IF NOT EXISTS `aqum_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    echo "✅ База данных 'aqum_db' создана\n\n";
     
     // Выбираем БД
-    $pdo->exec("USE `waybels_db`");
-    echo "✅ Переключились на БД 'waybels_db'\n\n";
+    $pdo->exec("USE `aqum_db`");
+    echo "✅ Переключились на БД 'aqum_db'\n\n";
     
     // Читаем SQL файл
-    $sqlFile = __DIR__ . '/database_waybels.sql';
+    $sqlFile = __DIR__ . '/setup_database.sql';
     
     if (!file_exists($sqlFile)) {
         throw new Exception("Файл $sqlFile не найден!");
