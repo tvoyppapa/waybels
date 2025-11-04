@@ -22,18 +22,23 @@ if (isset($_SESSION['needs_interests'])) {
     unset($_SESSION['needs_interests']);
 }
 
-// Получаем задания пользователя
-$stmt = $pdo->prepare("
-    SELECT a.*, u.name as teacher_name, u.username as teacher_username, u.avatar as teacher_avatar
-    FROM assignments a
-    JOIN users u ON a.teacher_id = u.id
-    WHERE a.student_id = ?
-    AND a.status != 'completed'
-    ORDER BY a.due_date ASC
-    LIMIT 5
-");
-$stmt->execute([$user_id]);
-$assignments = $stmt->fetchAll();
+// Получаем задания пользователя (с проверкой существования таблицы)
+try {
+    $stmt = $pdo->prepare("
+        SELECT a.*, u.name as teacher_name, u.username as teacher_username, u.avatar as teacher_avatar
+        FROM assignments a
+        JOIN users u ON a.teacher_id = u.id
+        WHERE a.student_id = ?
+        AND a.status != 'completed'
+        ORDER BY a.due_date ASC
+        LIMIT 5
+    ");
+    $stmt->execute([$user_id]);
+    $assignments = $stmt->fetchAll();
+} catch (PDOException $e) {
+    // Таблица assignments не существует - создадим пустой массив
+    $assignments = [];
+}
 
 // Получаем посты для ленты
 $userInterests = !empty($current_user['interests']) ? explode(',', $current_user['interests']) : [];
