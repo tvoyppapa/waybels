@@ -1,0 +1,31 @@
+# PHP
+*.log
+*.cache
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.bak
+*~
+
+# User uploads
+uploads/*
+!uploads/.gitkeep
+
+# Config (не коммитим с паролями)
+config_local.php
+.env
+
+# Old files
+*_OLD.*
+*_BACKUP.*

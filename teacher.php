@@ -22,7 +22,7 @@ $stmt->execute([$teacher_id]);
 $teacher = $stmt->fetch();
 
 if (!$teacher) {
-    redirect('dashboard.php');
+    redirect('search.php');
 }
 
 // Проверяем, в избранном ли
@@ -30,41 +30,27 @@ $stmt = $pdo->prepare("SELECT id FROM favorites WHERE user_id = ? AND teacher_id
 $stmt->execute([$user_id, $teacher_id]);
 $is_favorite = $stmt->fetch() !== false;
 
-// Получаем посты репетитора
-$stmt = $pdo->prepare("SELECT * FROM posts WHERE teacher_id = ? ORDER BY created_at DESC LIMIT 6");
-$stmt->execute([$teacher_id]);
-$posts = $stmt->fetchAll();
+// Получаем посты репетитора (если таблица posts существует)
+try {
+    $stmt = $pdo->prepare("SELECT * FROM posts WHERE teacher_id = ? ORDER BY created_at DESC LIMIT 6");
+    $stmt->execute([$teacher_id]);
+    $posts = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $posts = [];
+}
+
+// Параметры страницы
+$page_title = $teacher['name'];
+$show_back = true;
+$back_url = '/search.php';
+$page_css = ['teacher.css'];
+$page_js = ['teacher.js'];
+
+// Подключаем layout
+require_once 'includes/layout.php';
 ?>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= e($teacher['name']) ?> - WayBels</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style/dashboard.css">
-    <link rel="stylesheet" href="style/teacher.css">
-</head>
-<body>
-    
-    <!-- Sidebar -->
-    <?php include 'includes/sidebar.php'; ?>
-    
-    <main class="main-content">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-left">
-                <a href="dashboard.php" class="back-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
-                    </svg>
-                    Назад
-                </a>
-            </div>
-        </header>
-        
-        <!-- Профиль репетитора -->
-        <div class="teacher-profile">
+<!-- Профиль репетитора -->
+<div class="teacher-profile">
             <!-- Видео презентация -->
             <?php if ($teacher['video_url']): ?>
             <div class="teacher-video">
@@ -175,11 +161,10 @@ $posts = $stmt->fetchAll();
             </div>
             <?php endif; ?>
         </div>
-    </main>
-    
-    <!-- Bottom Nav -->
-    <?php include 'includes/bottom_nav.php'; ?>
-    
-    <script src="js/teacher.js"></script>
-</body>
-</html>
+    </div>
+</div>
+
+<?php
+// Подключаем футер layout
+require_once 'includes/layout_footer.php';
+?>

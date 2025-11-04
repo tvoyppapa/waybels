@@ -1,0 +1,270 @@
+/* ==========================================
+   СИСТЕМА ТЕМ AQUM
+   ========================================== */
+
+:root {
+    /* Светлая тема (по умолчанию) */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7fafc;
+    --bg-tertiary: #edf2f7;
+    --text-primary: #2d3748;
+    --text-secondary: #718096;
+    --text-tertiary: #a0aec0;
+    --border-color: #e2e8f0;
+    --accent-color: #667eea;
+    --accent-hover: #764ba2;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    /* Темная тема */
+    --bg-primary: #1a202c;
+    --bg-secondary: #2d3748;
+    --bg-tertiary: #4a5568;
+    --text-primary: #f7fafc;
+    --text-secondary: #cbd5e0;
+    --text-tertiary: #a0aec0;
+    --border-color: #4a5568;
+    --accent-color: #667eea;
+    --accent-hover: #764ba2;
+    --shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Применение переменных */
+body {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* ГЛОБАЛЬНЫЕ СТИЛИ ДЛЯ ВСЕХ ЭЛЕМЕНТОВ */
+.main-content {
+    background: var(--bg-secondary) !important;
+}
+
+.page-content {
+    background: var(--bg-secondary) !important;
+}
+
+.header {
+    background: var(--bg-primary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Все карточки и контейнеры */
+.card,
+.feed-container,
+.profile-container,
+.settings-container {
+    background: var(--bg-secondary) !important;
+}
+
+/* Форма элементы */
+input,
+textarea,
+select,
+.form-control,
+.form-select {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Кнопки */
+.btn-secondary {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Модальные окна */
+.modal-content {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-close {
+    color: var(--text-secondary) !important;
+}
+
+.modal-close:hover {
+    background: var(--bg-secondary) !important;
+}
+
+/* Dropdown */
+.user-dropdown-menu,
+.dropdown-menu {
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 10px 40px var(--shadow) !important;
+}
+
+.dropdown-item {
+    color: var(--text-primary) !important;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-secondary) !important;
+}
+
+.dropdown-divider {
+    border-color: var(--border-color) !important;
+}
+
+/* User info */
+.user-name {
+    color: var(--text-primary) !important;
+}
+
+/* Заголовки */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary) !important;
+}
+
+/* Текст */
+p, span, div {
+    color: inherit;
+}
+
+/* Ссылки */
+a {
+    color: inherit;
+}
+
+a:hover {
+    color: var(--accent-color);
+}
+
+/* ==========================================
+   УВЕДОМЛЕНИЕ О СМЕНЕ ТЕМЫ
+   ========================================== */
+
+.theme-notification {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px var(--shadow);
+    z-index: 10000;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.theme-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ==========================================
+   КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ
+   ========================================== */
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 10px;
+    width: 100%;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.theme-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.theme-text {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Мобильная кнопка темы */
+.theme-toggle-mobile {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.theme-toggle-mobile svg {
+    width: 24px;
+    height: 24px;
+}
+
+.theme-toggle-mobile.active {
+    color: var(--accent-color);
+}
+
+/* ==========================================
+   АДАПТАЦИЯ КОМПОНЕНТОВ К ТЕМАМ
+   ========================================== */
+
+.sidebar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.header {
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.post,
+.post-card,
+.teacher-card,
+.message-card,
+.assignment-card,
+.profile-header,
+.settings-section,
+.assignments-section {
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-group input,
+.form-group textarea {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-menu {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+    background: var(--bg-secondary);
+}

@@ -1,241 +1,248 @@
 <?php
-/**
- * Страница авторизации и регистрации
- */
-require_once 'auth_handler.php';
+session_start();
+
+// Если уже залогинен - на фид
+if (isset($_SESSION['user_id'])) {
+    header('Location: feed.php');
+    exit;
+}
+
+require_once 'config.php';
+require_once 'db.php';
+require_once 'helpers.php';
+
+// Получаем ошибки из сессии и очищаем
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['error']);
+
+// ==================================
+// ОБРАБОТКА ФОРМ
+// ==================================
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    // === ВХОД ===
+    if (isset($_POST['login_submit'])) {
+        $login = trim($_POST['login'] ?? '');
+        $password = $_POST['password'] ?? '';
+        
+        if (empty($login) || empty($password)) {
+            $_SESSION['error'] = 'Заполните все поля';
+        } else {
+            try {
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR phone = ?");
+                $stmt->execute([$login, $login]);
+                $user = $stmt->fetch();
+                
+                if ($user && password_verify($password, $user['password'])) {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_name'] = $user['name'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_role'] = $user['role'];
+                    
+                    $pdo->prepare("UPDATE users SET last_seen_at = NOW() WHERE id = ?")->execute([$user['id']]);
+                    
+                    header('Location: feed.php');
+                    exit;
+                } else {
+                    $_SESSION['error'] = 'Неверный email/телефон или пароль';
+                }
+            } catch (PDOException $e) {
+                $_SESSION['error'] = 'Ошибка: ' . $e->getMessage();
+            }
+        }
+        
+        header('Location: auth.php');
+        exit;
+    }
+    
+    // === РЕГИСТРАЦИЯ (ОДИН ШАГ) ===
+    elseif (isset($_POST['register_submit'])) {
+        $name = trim($_POST['name'] ?? '');
+        $login = trim($_POST['login'] ?? '');
+        $loginType = $_POST['login_type'] ?? 'email';
+        $password = $_POST['password'] ?? '';
+        
+        // Упрощенная валидация - ТОЛЬКО EMAIL
+        if (empty($name) || empty($login) || empty($password)) {
+            $_SESSION['error'] = 'Заполните все поля';
+        } elseif (!preg_match('/^[а-яёА-ЯЁa-zA-Z\s\-]+$/u', $name)) {
+            $_SESSION['error'] = 'Имя может содержать только буквы';
+        } elseif (!filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['error'] = 'Введите корректный email';
+        } elseif (strlen($password) < 6) {
+            $_SESSION['error'] = 'Пароль минимум 6 символов';
+        } else {
+            try {
+                // Проверка существования email
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                $stmt->execute([$login]);
+                if ($stmt->fetch()) {
+                    $_SESSION['error'] = 'Email уже занят';
+                }
+                
+                if (!isset($_SESSION['error'])) {
+                    // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ
+                    $formattedName = mb_convert_case(mb_strtolower($name), MB_CASE_TITLE, 'UTF-8');
+                    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+                    
+                    // Генерируем уникальный username
+                    $baseUsername = strtolower(preg_replace('/[^a-z0-9]/i', '', transliterate($name)));
+                    $username = $baseUsername;
+                    $counter = 1;
+                    
+                    // Проверяем уникальность
+                    while (true) {
+                        $checkStmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+                        $checkStmt->execute([$username]);
+                        if (!$checkStmt->fetch()) {
+                            break;
+                        }
+                        $username = $baseUsername . $counter;
+                        $counter++;
+                    }
+                    
+                    $stmt = $pdo->prepare("
+                        INSERT INTO users (name, username, email, password, role, created_at) 
+                        VALUES (?, ?, ?, ?, 'user', NOW())
+                    ");
+                    $stmt->execute([
+                        $formattedName,
+                        $username,
+                        $login, // используем $login (это email)
+                        $hashedPassword
+                    ]);
+                    
+                    $userId = $pdo->lastInsertId();
+                    
+                    // ЛОГИНИМ
+                    $_SESSION['user_id'] = $userId;
+                    $_SESSION['user_name'] = $formattedName;
+                    $_SESSION['user_email'] = $login;
+                    $_SESSION['user_role'] = 'user';
+                    
+                    // Флаг что нужно выбрать интересы на feed.php
+                    $_SESSION['needs_interests'] = true;
+                    
+                    header('Location: feed.php');
+                    exit;
+                }
+            } catch (PDOException $e) {
+                $_SESSION['error'] = 'Ошибка создания аккаунта: ' . $e->getMessage();
+            }
+        }
+        
+        header('Location: auth.php');
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Вход - WayBels</title>
-  
-  <!-- ОТЛАДКА -->
-  <style>
-    .debug-box {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #ff0;
-      border: 2px solid #f00;
-      padding: 10px;
-      z-index: 9999;
-      max-width: 300px;
-      font-size: 12px;
-    }
-  </style>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style/auth.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo APP_NAME; ?> - Вход</title>
+    <link rel="stylesheet" href="/style/auth.css">
 </head>
 <body>
-
-<div class="auth-container">
-  
-  <!-- ОТЛАДКА -->
-  <div class="debug-box">
-    <strong>ОТЛАДКА:</strong><br>
-    <?php 
-    echo "REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD'] . "<br>";
-    echo "POST data: " . (empty($_POST) ? "ПУСТО" : "ЕСТЬ") . "<br>";
-    if (!empty($_POST)) {
-        echo "POST keys: " . implode(', ', array_keys($_POST)) . "<br>";
-    }
-    echo "Session interests: " . (isset($_SESSION['interests']) ? $_SESSION['interests'] : "НЕТ") . "<br>";
-    echo "Error: " . ($error ?? "НЕТ") . "<br>";
-    echo "Success: " . ($success ?? "НЕТ") . "<br>";
-    ?>
-  </div>
-  
-  <!-- Левая часть с логотипом -->
-  <div class="auth-left">
-    <div class="promo-content">
-      <img src="img/logo-white.svg" alt="WayBels" class="logo">
-    </div>
-  </div>
-  
-  <!-- Правая часть -->
-  <div class="auth-right">
-    <?php if (!isset($_SESSION['interests'])): ?>
-      <!-- Квиз выбора интересов -->
-      <div class="quiz-container" id="quiz-section">
-        <h2>Что бы вы хотели изучать?</h2>
-        <p class="subtitle">Выберите направление, которое вам интересно</p>
-        
-        <?php if ($error): ?>
-          <div class="alert alert-error" role="alert">
-            <?= htmlspecialchars($error) ?>
-          </div>
-        <?php endif; ?>
-        
-        <form method="POST" class="quiz-form" id="quiz-form">
-          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCsrfToken()) ?>">
-          
-          <?php foreach (INTEREST_CATEGORIES as $key => $category): ?>
-            <button 
-              type="submit" 
-              name="interests" 
-              value="<?= htmlspecialchars($key) ?>"
-              class="quiz-btn"
-            >
-              <span class="quiz-icon"><?= $category['icon'] ?></span>
-              <span class="quiz-name"><?= htmlspecialchars($category['name']) ?></span>
-            </button>
-          <?php endforeach; ?>
-        </form>
-        
-        <p class="switch-text" style="margin-top: 24px;">
-          <a href="index.php">← На главную</a>
-        </p>
-      </div>
-
-    <?php else: ?>
-      <!-- Форма входа/регистрации -->
-      <div class="form-container">
-        <div class="form-header">
-          <h2>Добро пожаловать</h2>
-          <p class="welcome-subtitle">Войдите или зарегистрируйтесь</p>
-          <?php if (isset($_SESSION['interests'])): ?>
-              <p class="selected-interest">
-                Выбрано: <strong><?= htmlspecialchars(INTEREST_CATEGORIES[$_SESSION['interests']]['name']) ?></strong>
-                <a href="?reset=1" class="reset-interest" title="Изменить выбор">×</a>
-              </p>
-          <?php endif; ?>
+    <div class="auth-wrapper">
+        <!-- ЛЕВАЯ ПАНЕЛЬ С BACKGROUND -->
+        <div class="auth-left">
+            <div class="auth-overlay">
+                <h2>Начните свое обучение</h2>
+                <p>Вы можете получить все, что хотите, если будете усердно работать, доверять процессу и придерживаться плана.</p>
+            </div>
         </div>
 
-        <!-- Google вход -->
-        <a href="google_login.php" class="google-btn">
-          <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Войти через Google
-        </a>
+        <!-- ПРАВАЯ ПАНЕЛЬ С ФОРМАМИ -->
+        <div class="auth-right">
+            <div class="auth-content">
+                
+                <div class="auth-logo">
+                    <img src="/img/logo.svg" alt="<?php echo APP_NAME; ?>">
+                </div>
 
-        <div class="divider"><span>или</span></div>
+                <?php if ($error): ?>
+                    <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
 
-        <!-- Сообщения об ошибках/успехе -->
-        <?php if ($error): ?>
-          <div class="alert alert-error" role="alert">
-            <?= htmlspecialchars($error) ?>
-          </div>
-        <?php endif; ?>
-        
-        <?php if ($success): ?>
-          <div class="alert alert-success" role="alert">
-            <?= htmlspecialchars($success) ?>
-          </div>
-        <?php endif; ?>
+                <!-- ВХОД -->
+                <form method="POST" id="login-form" class="auth-form active">
+                    <h2>Вход в аккаунт</h2>
+                    <p class="subtitle">Введите свои данные для входа</p>
 
-        <!-- Форма входа -->
-        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" id="login-form" class="auth-form">
-          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCsrfToken()) ?>">
-          
-          <div class="form-group">
-            <label for="login-email">Email</label>
-            <input 
-              type="email" 
-              id="login-email"
-              name="email" 
-              placeholder="your@email.com" 
-              value="<?= htmlspecialchars(old('email')) ?>"
-              required
-              autocomplete="email"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="login-password">Пароль</label>
-            <input 
-              type="password" 
-              id="login-password"
-              name="password" 
-              placeholder="Введите пароль" 
-              required
-              autocomplete="current-password"
-            >
-          </div>
-          
-          <button type="submit" name="login" class="btn-primary">
-            Войти
-          </button>
+                    <div class="form-group">
+                        <label>Email или номер телефона</label>
+                        <input type="text" name="login" placeholder="Введите email или телефон" required>
+                    </div>
 
-          <p class="switch-text">
-            Нет аккаунта? <a href="#" id="show-register">Зарегистрироваться</a>
-          </p>
-          <p class="switch-text">
-            <a href="reset_password.php">Забыли пароль?</a>
-          </p>
-        </form>
+                    <div class="form-group">
+                        <label>Пароль</label>
+                        <input type="password" name="password" placeholder="Введите пароль" required>
+                    </div>
 
-        <!-- Форма регистрации -->
-        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" id="register-form" class="auth-form" style="display:none;">
-          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCsrfToken()) ?>">
-          
-          <h3 class="form-title">Регистрация</h3>
-          
-          <div class="form-group">
-            <label for="register-name">Имя *</label>
-            <input 
-              type="text" 
-              id="register-name"
-              name="name" 
-              placeholder="Введите ваше имя" 
-              value="<?= htmlspecialchars(old('name')) ?>"
-              required
-              autocomplete="name"
-              minlength="2"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="register-email">Email *</label>
-            <input 
-              type="email" 
-              id="register-email"
-              name="email" 
-              placeholder="your@email.com" 
-              value="<?= htmlspecialchars(old('email')) ?>"
-              required
-              autocomplete="email"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="register-password">Пароль *</label>
-            <input 
-              type="password" 
-              id="register-password"
-              name="password" 
-              placeholder="Минимум 6 символов" 
-              required
-              autocomplete="new-password"
-              minlength="6"
-            >
-            <small class="form-hint">Минимум 6 символов</small>
-          </div>
-          
-          <button type="submit" name="register" class="btn-primary">
-            <span>Зарегистрироваться</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </button>
-          
-          <p class="switch-text">
-            Уже есть аккаунт? <a href="#" id="show-login">Войти</a>
-          </p>
-        </form>
-      </div>
-    <?php endif; ?>
-  </div>
-</div>
+                    <button type="submit" name="login_submit" class="btn btn-primary">Войти</button>
+                
+                    <div class="divider"><span>или войдите с помощью</span></div>
+                    
+                    <button type="button" class="btn btn-google" onclick="alert('Скоро!')">
+                        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                        Войти через Google
+                    </button>
 
-<script src="js/auth.js"></script>
+                    <p class="auth-footer">
+                        Нет аккаунта? <a href="#" onclick="showRegister(); return false;">Зарегистрироваться</a>
+                    </p>
+                </form>
 
+                <!-- РЕГИСТРАЦИЯ (ОДИН ШАГ) -->
+                <form method="POST" id="register-form" class="auth-form">
+                    <h2>Создать аккаунт</h2>
+                    <p class="subtitle">Заполните данные для регистрации</p>
+
+                    <div class="form-group">
+                        <label>Имя</label>
+                        <input type="text" name="name" id="register-name" placeholder="Иван" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="login-label">
+                            Email
+                            <span class="input-type-toggle">
+                                <a href="#" class="active" data-type="email">Email</a>
+                                <span class="separator">|</span>
+                                <a href="#" data-type="phone">Телефон</a>
+                            </span>
+                        </label>
+                        <input type="email" name="login" id="register-login" placeholder="example@mail.com" required>
+                        <input type="hidden" name="login_type" id="login-type" value="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Пароль</label>
+                        <input type="password" name="password" placeholder="Минимум 6 символов" required>
+                    </div>
+
+                    <button type="submit" name="register_submit" class="btn btn-primary">Создать аккаунт</button>
+                    
+                    <div class="divider"><span>или зарегистрируйтесь с помощью</span></div>
+                    
+                    <button type="button" class="btn btn-google" onclick="alert('Скоро!')">
+                        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                        Регистрация через Google
+                    </button>
+
+                    <p class="auth-footer">
+                        Есть аккаунт? <a href="#" onclick="showLogin(); return false;">Войти</a><br>
+                        <small>Репетитор? <a href="teacher_register.php">Регистрация для репетиторов</a></small>
+                    </p>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
 </body>
 </html>

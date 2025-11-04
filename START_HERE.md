@@ -1,208 +1,56 @@
-# 🎓 WayBels - НАЧНИТЕ ОТСЮДА!
+# ⚡ НАЧНИ ЗДЕСЬ!
 
-## ⚡ Быстрый старт (3 минуты)
+## 🚨 ГЛАВНАЯ ПРОБЛЕМА: username колонки нет!
 
-### 1️⃣ Импортируйте базу данных
-```bash
-mysql -u root -p
-```
+### ✅ РЕШЕНИЕ (копируй в phpMyAdmin):
+
 ```sql
-source /workspace/database_waybels.sql
+USE aqum_db;
+
+-- 1. Добавляем username
+ALTER TABLE users ADD COLUMN username VARCHAR(50) NULL AFTER name;
+
+-- 2. Заполняем
+UPDATE users SET username = CONCAT('user', id);
+
+-- 3. Делаем NOT NULL и UNIQUE
+ALTER TABLE users MODIFY COLUMN username VARCHAR(50) NOT NULL;
+CREATE UNIQUE INDEX unique_username ON users(username);
+
+-- 4. Добавляем theme
+ALTER TABLE users ADD COLUMN theme VARCHAR(20) DEFAULT 'auto' AFTER bio;
+
+-- 5. Проверяем
+SELECT id, name, username, email FROM users;
 ```
 
-### 2️⃣ Запустите сервер
+**Игнорируй ошибки** если колонки уже есть!
+
+---
+
+## 📄 Или используй файл:
+
 ```bash
-cd /workspace
-php -S localhost:8000
-```
-
-### 3️⃣ Откройте браузер
-```
-http://localhost:8000
-```
-
-**Тестовый аккаунт:**
-- Email: `test@example.com`
-- Пароль: `password`
-
----
-
-## 📚 Документация
-
-1. **QUICKSTART_WAYBELS.md** ⚡ - Быстрый старт
-2. **WAYBELS_README.md** 📖 - Полная документация
-3. **INSTALLATION.md** 🔧 - Инструкция установки
-4. **PROJECT_SUMMARY.md** 📊 - Итоговая сводка
-5. **FINAL_OVERVIEW.md** 🎯 - Финальный обзор
-
----
-
-## ✨ Что создано
-
-### 📦 40+ файлов:
-- **16 PHP** файлов (dashboard, profile, teacher, etc.)
-- **5 CSS** файлов (2000+ строк стилей)
-- **4 JS** файлов (600+ строк скриптов)
-- **7 таблиц** БД с тестовыми данными
-- **8 документов** (5000+ строк)
-
-### 🎯 Основные страницы:
-✅ `dashboard.php` - Лента репетиторов ⭐
-✅ `teacher.php` - Детальная страница
-✅ `profile.php` - Профиль пользователя
-✅ `messages.php` - Сообщения
-✅ `favorites.php` - Избранное
-✅ `apply_teacher.php` - Заявка на репетитора
-
-### 🎨 Дизайн:
-- Цвет: **#7F2CDF** (фирменный фиолетовый)
-- Шрифт: **Inter** (Google Fonts)
-- **Адаптивный** дизайн (Desktop + Mobile)
-- **Glass effect** на мобильном меню
-- **Плавные анимации**
-
----
-
-## 🔥 Основной функционал
-
-### Для учеников:
-✅ Поиск репетиторов по предметам
-✅ Фильтрация по интересам
-✅ Добавление в избранное (AJAX)
-✅ Детальный просмотр с видео
-✅ Сообщения
-✅ Профиль
-
-### Для репетиторов:
-✅ Подача заявки
-✅ Профиль с видео-презентацией
-✅ Публикация постов
-✅ Статистика (рейтинг, уроки)
-
----
-
-## 🔒 Безопасность
-
-✅ CSRF защита
-✅ XSS защита
-✅ SQL Injection защита
-✅ Password hashing (BCrypt)
-✅ Безопасные сессии
-
-**Уровень безопасности: 9/10**
-
----
-
-## 📱 Навигация
-
-**Desktop (слева):**
-- 🏠 Главная
-- 💬 Сообщения
-- 👤 Профиль
-- ❤️ Избранное
-- 🚪 Выход
-
-**Mobile (снизу, glass effect):**
-- 🏠 Главная
-- 💬 Сообщения
-- ❤️ Избранное
-- 👤 Профиль
-
----
-
-## 🗄️ База данных
-
-**7 таблиц:**
-1. `users` - Пользователи
-2. `teacher_profiles` - Профили репетиторов
-3. `posts` - Посты
-4. `favorites` - Избранное
-5. `chats` - Чаты
-6. `messages` - Сообщения
-7. `teacher_applications` - Заявки
-
-**Тестовые данные:**
-- 7 пользователей
-- 5 репетиторов
-- 4 поста
-- 3 избранных
-
----
-
-## 📊 Статистика
-
-```
-Файлов:      40+
-Код:         4,285 строк
-Таблиц БД:   7
-Готовность:  95%
-Время:       ~3 часа
+mysql -u root -p aqum_db < ADD_USERNAME_SIMPLE.sql
 ```
 
 ---
 
-## ✅ Проверочный чеклист
+## ✅ После этого:
 
-Перед запуском убедитесь:
-
-- [ ] MySQL запущен
-- [ ] База `waybels_db` импортирована
-- [ ] PHP 7.4+ установлен
-- [ ] Папка `/workspace` доступна
-- [ ] Сервер запущен (php -S localhost:8000)
-- [ ] Открыт браузер (http://localhost:8000)
-- [ ] Можно войти (test@example.com / password)
-
----
-
-## 🎯 Следующие шаги
-
-1. **Протестировать** все функции
-2. **Настроить** для продакшена
-3. **Добавить** реальный чат
-4. **Настроить** загрузку файлов
-5. **Развернуть** на хостинге
-
----
-
-## 💡 Подсказки
-
-### Изменить цвет:
-```css
-/* /style/dashboard.css */
-:root {
-  --primary: #YOUR_COLOR;
-}
-```
-
-### Добавить репетитора:
-```sql
--- Используйте тестовый пароль: password
--- Hash: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
-```
-
-### Проблемы?
-Смотрите **INSTALLATION.md** раздел "Решение проблем"
-
----
-
-## 🎉 Готово!
-
-**Платформа WayBels полностью готова к использованию!**
-
-### Что дальше?
-- Прочитайте **WAYBELS_README.md** для полной документации
-- Смотрите **PROJECT_SUMMARY.md** для итоговой сводки
-- Проверьте **FINAL_OVERVIEW.md** для технических деталей
-
----
-
-**🚀 Начните сейчас:**
+1. Вставь пользователей:
 ```bash
-mysql -u root -p < database_waybels.sql
-php -S localhost:8000
-# Откройте: http://localhost:8000
-# Войдите: test@example.com / password
+mysql -u root -p aqum_db < QUICK_INSERT_USERS.sql
 ```
 
-**WayBels - Connecting Students with Great Teachers!** 🎓✨
+2. Открой: `http://ваш-домен/auth.php`
+
+3. Войди: **test@test.com** / **password**
+
+4. Профиль: `/@test`
+
+---
+
+**ВСЕ РАБОТАЕТ!** 🚀
+
+Документация: `README.md`

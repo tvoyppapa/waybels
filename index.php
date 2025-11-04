@@ -4,9 +4,9 @@
  */
 session_start();
 
-// Если пользователь уже авторизован - редирект на dashboard
+// Если пользователь уже авторизован - редирект на ленту
 if (isset($_SESSION['user_id'])) {
-    header("Location: dashboard.php");
+    header("Location: feed.php");
     exit;
 }
 ?>
@@ -15,7 +15,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WayBels - Найди своего репетитора</title>
+    <title>aqum - Образовательная платформа нового поколения</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
@@ -163,7 +163,7 @@ if (isset($_SESSION['user_id'])) {
     
     <div class="container">
         <header>
-            <img src="img/logo-white.svg" alt="WayBels" class="logo">
+            <img src="img/logo-white.svg" alt="aqum" class="logo">
             <div class="auth-buttons">
                 <a href="auth.php" class="btn btn-secondary">Войти</a>
                 <a href="register.php" class="btn btn-primary">Регистрация</a>
@@ -171,8 +171,8 @@ if (isset($_SESSION['user_id'])) {
         </header>
         
         <section class="hero">
-            <h1>Найди своего идеального репетитора</h1>
-            <p>Пространство, где знание превращается в опыт</p>
+            <h1>Образовательная платформа нового поколения</h1>
+            <p>Обучайся, развивайся, достигай новых высот с aqum</p>
             
             <div class="cta-buttons">
                 <a href="register.php" class="btn btn-primary" style="padding: 16px 48px; font-size: 18px;">

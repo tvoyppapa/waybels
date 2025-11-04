@@ -44,7 +44,36 @@ function validatePassword(string $password): array {
  * Валидация имени
  */
 function validateName(string $name): bool {
-    return strlen(trim($name)) >= 2;
+    $name = trim($name);
+    
+    // Минимум 2 символа
+    if (strlen($name) < 2) {
+        return false;
+    }
+    
+    // Только буквы, пробелы и дефисы (без цифр, подчеркиваний, точек)
+    if (!preg_match('/^[а-яёА-ЯЁa-zA-Z\s\-]+$/u', $name)) {
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Форматирование имени (первая буква заглавная)
+ */
+function formatName(string $name): string {
+    $name = trim($name);
+    
+    // Разбиваем на слова
+    $words = preg_split('/\s+/u', $name);
+    
+    // Делаем первую букву каждого слова заглавной
+    $words = array_map(function($word) {
+        return mb_convert_case(mb_strtolower($word), MB_CASE_TITLE, 'UTF-8');
+    }, $words);
+    
+    return implode(' ', $words);
 }
 
 /**
@@ -58,6 +87,13 @@ function e(?string $string): string {
  * Редирект
  */
 function redirect(string $url): void {
+    // Если headers уже отправлены, используем JavaScript
+    if (headers_sent()) {
+        echo "<script>window.location.href='$url';</script>";
+        echo "<meta http-equiv='refresh' content='0;url=$url'>";
+        exit;
+    }
+    
     header("Location: $url");
     exit;
 }
@@ -100,4 +136,86 @@ function getFlashMessage(): ?array {
         return $flash;
     }
     return null;
+}
+
+/**
+ * Форматирование времени "назад" (time ago)
+ */
+function timeAgo(string $datetime): string {
+    $timestamp = strtotime($datetime);
+    $diff = time() - $timestamp;
+    
+    if ($diff < 60) {
+        return 'только что';
+    }
+    
+    if ($diff < 3600) {
+        $minutes = floor($diff / 60);
+        return $minutes . ' ' . pluralize($minutes, 'минута', 'минуты', 'минут') . ' назад';
+    }
+    
+    if ($diff < 86400) {
+        $hours = floor($diff / 3600);
+        return $hours . ' ' . pluralize($hours, 'час', 'часа', 'часов') . ' назад';
+    }
+    
+    if ($diff < 604800) {
+        $days = floor($diff / 86400);
+        return $days . ' ' . pluralize($days, 'день', 'дня', 'дней') . ' назад';
+    }
+    
+    if ($diff < 2592000) {
+        $weeks = floor($diff / 604800);
+        return $weeks . ' ' . pluralize($weeks, 'неделя', 'недели', 'недель') . ' назад';
+    }
+    
+    if ($diff < 31536000) {
+        $months = floor($diff / 2592000);
+        return $months . ' ' . pluralize($months, 'месяц', 'месяца', 'месяцев') . ' назад';
+    }
+    
+    $years = floor($diff / 31536000);
+    return $years . ' ' . pluralize($years, 'год', 'года', 'лет') . ' назад';
+}
+
+/**
+ * Плюрализация русских слов
+ */
+function pluralize(int $number, string $one, string $few, string $many): string {
+    $mod10 = $number % 10;
+    $mod100 = $number % 100;
+    
+    if ($mod10 === 1 && $mod100 !== 11) {
+        return $one;
+    }
+    
+    if ($mod10 >= 2 && $mod10 <= 4 && ($mod100 < 10 || $mod100 >= 20)) {
+        return $few;
+    }
+    
+    return $many;
+}
+
+/**
+ * Транслитерация кириллицы в латиницу
+ */
+function transliterate($text) {
+    $translitMap = [
+        'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd',
+        'е' => 'e', 'ё' => 'e', 'ж' => 'zh', 'з' => 'z', 'и' => 'i',
+        'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n',
+        'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't',
+        'у' => 'u', 'ф' => 'f', 'х' => 'h', 'ц' => 'ts', 'ч' => 'ch',
+        'ш' => 'sh', 'щ' => 'sch', 'ъ' => '', 'ы' => 'y', 'ь' => '',
+        'э' => 'e', 'ю' => 'yu', 'я' => 'ya',
+        'А' => 'A', 'Б' => 'B', 'В' => 'V', 'Г' => 'G', 'Д' => 'D',
+        'Е' => 'E', 'Ё' => 'E', 'Ж' => 'Zh', 'З' => 'Z', 'И' => 'I',
+        'Й' => 'Y', 'К' => 'K', 'Л' => 'L', 'М' => 'M', 'Н' => 'N',
+        'О' => 'O', 'П' => 'P', 'Р' => 'R', 'С' => 'S', 'Т' => 'T',
+        'У' => 'U', 'Ф' => 'F', 'Х' => 'H', 'Ц' => 'Ts', 'Ч' => 'Ch',
+        'Ш' => 'Sh', 'Щ' => 'Sch', 'Ъ' => '', 'Ы' => 'Y', 'Ь' => '',
+        'Э' => 'E', 'Ю' => 'Yu', 'Я' => 'Ya'
+    ];
+    
+    return strtr($text, $translitMap);
 }
