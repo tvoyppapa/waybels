@@ -5,6 +5,9 @@ require_once 'config.php';
 require_once 'db.php';
 require_once 'helpers.php';
 
+// ОТЛАДКА (убери после исправления)
+// file_put_contents('/tmp/profile_debug.log', date('Y-m-d H:i:s') . ' - GET: ' . print_r($_GET, true) . "\n", FILE_APPEND);
+
 // Определяем чей профиль смотрим
 $username = $_GET['username'] ?? null;
 $current_user_id = $_SESSION['user_id'] ?? null;
