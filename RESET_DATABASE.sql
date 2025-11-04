@@ -19,7 +19,7 @@ USE aqum_db;
 CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    nickname VARCHAR(50) NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(255) NULL UNIQUE,
     phone VARCHAR(20) NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -28,6 +28,7 @@ CREATE TABLE users (
     role VARCHAR(20) DEFAULT 'user',
     avatar VARCHAR(255) DEFAULT '/img/default-avatar.png',
     bio TEXT NULL,
+    theme VARCHAR(20) DEFAULT 'auto',
     google_id VARCHAR(255) NULL UNIQUE,
     last_seen_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

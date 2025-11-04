@@ -104,12 +104,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $emailValue = $isEmail ? $login : null;
                     $phoneValue = !$isEmail ? $cleanPhone : null;
                     
+                    // Генерируем уникальный username
+                    $baseUsername = strtolower(preg_replace('/[^a-z0-9]/i', '', transliterate($name)));
+                    $username = $baseUsername;
+                    $counter = 1;
+                    
+                    // Проверяем уникальность
+                    while (true) {
+                        $checkStmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+                        $checkStmt->execute([$username]);
+                        if (!$checkStmt->fetch()) {
+                            break;
+                        }
+                        $username = $baseUsername . $counter;
+                        $counter++;
+                    }
+                    
                     $stmt = $pdo->prepare("
-                        INSERT INTO users (name, email, phone, password, role, created_at) 
-                        VALUES (?, ?, ?, ?, 'user', NOW())
+                        INSERT INTO users (name, username, email, phone, password, role, created_at) 
+                        VALUES (?, ?, ?, ?, ?, 'user', NOW())
                     ");
                     $stmt->execute([
                         $formattedName,
+                        $username,
                         $emailValue,
                         $phoneValue,
                         $hashedPassword

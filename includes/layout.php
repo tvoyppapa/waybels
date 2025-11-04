@@ -56,10 +56,12 @@ $back_url = $back_url ?? null;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style/theme.css">
     <link rel="stylesheet" href="/style/dashboard.css">
     <?php foreach ($page_css as $css): ?>
     <link rel="stylesheet" href="/style/<?= e($css) ?>">
     <?php endforeach; ?>
+    <script src="/js/theme.js"></script>
 </head>
 <body>
     

@@ -1,9 +1,6 @@
 <?php
 /**
  * Универсальное боковое меню (Desktop)
- * Автоматически определяет активную страницу
- * Параметры:
- * - $compact: true для компактного режима (только иконки) - для чатов, звонков
  */
 $current_page = basename($_SERVER['PHP_SELF']);
 $compact_mode = isset($compact) && $compact === true;
@@ -11,9 +8,6 @@ $compact_mode = isset($compact) && $compact === true;
 <aside class="sidebar <?= $compact_mode ? 'sidebar-compact' : '' ?>">
     <div class="sidebar-header">
         <img src="/img/logo-white.svg" alt="aqum" class="sidebar-logo">
-        <?php if (!$compact_mode): ?>
-        <span class="sidebar-brand">aqum</span>
-        <?php endif; ?>
     </div>
     
     <nav class="sidebar-nav">
@@ -48,7 +42,7 @@ $compact_mode = isset($compact) && $compact === true;
             <?php endif; ?>
         </a>
         
-        <a href="/profile.php" class="nav-item <?= $current_page === 'profile.php' ? 'active' : '' ?>" title="Профиль">
+        <a href="/profile.php?user=<?= $_SESSION['user_id'] ?? '' ?>" class="nav-item <?= $current_page === 'profile.php' ? 'active' : '' ?>" title="Профиль">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
@@ -60,15 +54,22 @@ $compact_mode = isset($compact) && $compact === true;
     </nav>
     
     <div class="sidebar-footer">
-        <a href="/logout.php" class="nav-item" title="Выйти">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
+        <!-- Переключатель темы -->
+        <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">
+            <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
             </svg>
             <?php if (!$compact_mode): ?>
-            <span>Выйти</span>
+            <span class="theme-text">Тема</span>
             <?php endif; ?>
-        </a>
+        </button>
     </div>
 </aside>

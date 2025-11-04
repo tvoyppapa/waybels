@@ -39,7 +39,7 @@ try {
         CREATE TABLE users (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
-            nickname VARCHAR(50) NULL,
+            username VARCHAR(50) NOT NULL UNIQUE,
             email VARCHAR(255) NULL UNIQUE,
             phone VARCHAR(20) NULL UNIQUE,
             password VARCHAR(255) NOT NULL,
@@ -48,6 +48,7 @@ try {
             role VARCHAR(20) DEFAULT 'user',
             avatar VARCHAR(255) DEFAULT '/img/default-avatar.png',
             bio TEXT NULL,
+            theme VARCHAR(20) DEFAULT 'auto',
             google_id VARCHAR(255) NULL UNIQUE,
             last_seen_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -142,11 +143,45 @@ try {
     ");
     echo "<p>✅ Таблица user_interactions создана</p>";
     
+    // assignments
+    $pdo->exec("
+        CREATE TABLE assignments (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            teacher_id INT UNSIGNED NOT NULL,
+            student_id INT UNSIGNED NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            due_date DATETIME NULL,
+            status VARCHAR(20) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    echo "<p>✅ Таблица assignments создана</p>";
+    
+    // stories
+    $pdo->exec("
+        CREATE TABLE stories (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id INT UNSIGNED NOT NULL,
+            media_url VARCHAR(500) NOT NULL,
+            media_type VARCHAR(20) DEFAULT 'image',
+            caption TEXT NULL,
+            views_count INT UNSIGNED DEFAULT 0,
+            expires_at TIMESTAMP NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    echo "<p>✅ Таблица stories создана</p>";
+    
     // Вставляем тестовых пользователей
     echo "<h2>Добавление тестовых данных...</h2>";
     
     $pdo->exec("
-        INSERT INTO users (name, nickname, email, phone, password, age, interests, role, last_seen_at) VALUES
+        INSERT INTO users (name, username, email, phone, password, age, interests, role, last_seen_at) VALUES
         ('Тест Юзер', 'test', 'test@test.com', NULL, '\$2y\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 25, 'programming,design', 'user', NOW()),
         ('Иван Петров', 'ivan', 'ivan@aqum.com', '+79991234567', '\$2y\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 32, 'languages,teaching', 'teacher', NOW()),
         ('Мария Смирнова', 'maria', 'maria@aqum.com', '+79997654321', '\$2y\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 28, 'programming,teaching', 'teacher', NOW()),
