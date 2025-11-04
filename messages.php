@@ -1,101 +1,188 @@
 <?php
-session_start();
+/**
+ * AQUM - Сообщения
+ * Чаты, сторис, диалоги
+ */
+
+require_once 'config.php';
 require_once 'db.php';
 require_once 'helpers.php';
 
-if (!isset($_SESSION['user_id'])) {
-    redirect('index.php');
-}
+session_start();
+requireAuth();
 
 $user_id = $_SESSION['user_id'];
+$user = getUserById($user_id);
+updateUserLastSeen($user_id);
+$unread_count = getUnreadMessagesCount($user_id);
 
-// Получаем чаты пользователя
+// Получаем список чатов пользователя
 $stmt = $pdo->prepare("
-    SELECT c.*, 
-           u.id as contact_id,
-           u.name as contact_name, 
-           u.avatar as contact_avatar,
-           c.last_message,
-           c.last_message_at
-    FROM chats c
-    INNER JOIN users u ON (
+    SELECT 
+        c.id as channel_id,
+        c.name as channel_name,
+        c.type as channel_type,
+        c.last_message_at,
         CASE 
-            WHEN c.user1_id = ? THEN c.user2_id 
-            ELSE c.user1_id 
-        END = u.id
-    )
-    WHERE c.user1_id = ? OR c.user2_id = ?
+            WHEN c.type = 'private' THEN (
+                SELECT u.name 
+                FROM channel_members cm2
+                JOIN users u ON cm2.user_id = u.id
+                WHERE cm2.channel_id = c.id AND cm2.user_id != ?
+                LIMIT 1
+            )
+            ELSE c.name
+        END as display_name,
+        CASE 
+            WHEN c.type = 'private' THEN (
+                SELECT u.avatar
+                FROM channel_members cm2
+                JOIN users u ON cm2.user_id = u.id
+                WHERE cm2.channel_id = c.id AND cm2.user_id != ?
+                LIMIT 1
+            )
+            ELSE NULL
+        END as avatar,
+        (SELECT content FROM messages WHERE channel_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+        (SELECT COUNT(*) FROM messages m 
+         LEFT JOIN message_reads mr ON m.id = mr.message_id AND mr.user_id = ?
+         WHERE m.channel_id = c.id AND m.sender_id != ? AND mr.id IS NULL) as unread_messages
+    FROM channels c
+    JOIN channel_members cm ON c.id = cm.channel_id
+    WHERE cm.user_id = ?
     ORDER BY c.last_message_at DESC
 ");
-$stmt->execute([$user_id, $user_id, $user_id]);
+$stmt->execute([$user_id, $user_id, $user_id, $user_id, $user_id]);
 $chats = $stmt->fetchAll();
+
+// Получаем активные сторис (только в разделе сообщений)
+$stmt = $pdo->prepare("
+    SELECT s.*, u.name, u.avatar, u.username,
+           (SELECT COUNT(*) FROM story_views WHERE story_id = s.id AND user_id = ?) as viewed
+    FROM stories s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.expires_at > NOW()
+    AND (
+        s.user_id = ? 
+        OR s.user_id IN (SELECT teacher_id FROM favorites WHERE user_id = ?)
+        OR s.user_id IN (SELECT user_id FROM channel_members WHERE channel_id IN 
+            (SELECT channel_id FROM channel_members WHERE user_id = ?))
+    )
+    GROUP BY s.user_id
+    ORDER BY MAX(s.created_at) DESC
+    LIMIT 10
+");
+$stmt->execute([$user_id, $user_id, $user_id, $user_id]);
+$stories = $stmt->fetchAll();
+
+$current_page = 'messages';
 ?>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сообщения - WayBels</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style/dashboard.css">
-    <link rel="stylesheet" href="style/messages.css">
+<?php include 'includes/header.php'; ?>
+<title>Сообщения - AQUM</title>
+<link rel="stylesheet" href="/style/messages.css">
 </head>
 <body>
-    
+
+<div class="app-container">
     <?php include 'includes/sidebar.php'; ?>
     
     <main class="main-content">
-        <header class="header">
-            <div class="header-left">
-                <h1>Сообщения</h1>
-            </div>
-        </header>
-        
         <div class="messages-container">
-            <?php if (empty($chats)): ?>
+            <!-- Заголовок -->
+            <div class="messages-header">
+                <h1>Сообщения</h1>
+                <button class="btn-icon" onclick="alert('Новое сообщение - в разработке')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Сторис -->
+            <?php if (!empty($stories)): ?>
+            <div class="stories-section">
+                <div class="stories-container">
+                    <!-- Моя история -->
+                    <button class="story-item story-add" onclick="alert('Добавить сторис - в разработке')">
+                        <?= getAvatar($user['avatar'], $user['name'], 56) ?>
+                        <div class="story-add-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                        </div>
+                        <span>Ваша история</span>
+                    </button>
+                    
+                    <!-- Истории других -->
+                    <?php foreach ($stories as $story): ?>
+                    <button class="story-item <?= $story['viewed'] ? 'story-viewed' : '' ?>" 
+                            onclick="alert('Просмотр сторис - в разработке')">
+                        <?= getAvatar($story['avatar'], $story['name'], 56) ?>
+                        <span><?= e($story['name']) ?></span>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Поиск -->
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" placeholder="Поиск сообщений..." id="search-input">
+            </div>
+            
+            <!-- Список чатов -->
+            <div class="chats-list">
+                <?php if (empty($chats)): ?>
                 <div class="empty-state">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
-                    <h2>Нет сообщений</h2>
-                    <p>Начните общение с репетиторами</p>
-                    <a href="dashboard.php" class="btn-primary">Найти репетитора</a>
+                    <h3>Нет сообщений</h3>
+                    <p>Начните общение с преподавателями</p>
                 </div>
-            <?php else: ?>
-                <div class="chats-list">
+                <?php else: ?>
                     <?php foreach ($chats as $chat): ?>
-                        <a href="chat.php?id=<?= $chat['contact_id'] ?>" class="chat-item">
-                            <img src="<?= e($chat['contact_avatar']) ?>" alt="<?= e($chat['contact_name']) ?>" class="chat-avatar">
-                            
-                            <div class="chat-info">
-                                <div class="chat-header">
-                                    <h3><?= e($chat['contact_name']) ?></h3>
-                                    <span class="chat-time"><?= timeAgo($chat['last_message_at']) ?></span>
-                                </div>
-                                <p class="chat-last-message"><?= e(mb_substr($chat['last_message'] ?? '', 0, 50)) ?></p>
+                    <a href="chat.php?id=<?= $chat['channel_id'] ?>" class="chat-item">
+                        <div class="chat-avatar">
+                            <?= getAvatar($chat['avatar'], $chat['display_name'], 56) ?>
+                            <?php if ($chat['unread_messages'] > 0): ?>
+                            <span class="chat-badge"><?= $chat['unread_messages'] ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="chat-info">
+                            <div class="chat-header">
+                                <span class="chat-name"><?= e($chat['display_name']) ?></span>
+                                <span class="chat-time"><?= timeAgo($chat['last_message_at']) ?></span>
                             </div>
-                        </a>
+                            <p class="chat-message <?= $chat['unread_messages'] > 0 ? 'chat-unread' : '' ?>">
+                                <?= e(truncate($chat['last_message'] ?? 'Нет сообщений', 60)) ?>
+                            </p>
+                        </div>
+                    </a>
                     <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
     </main>
-    
-    <?php include 'includes/bottom_nav.php'; ?>
-    
+</div>
+
+<?php include 'includes/footer.php'; ?>
+
+<script>
+// Поиск по чатам
+document.getElementById('search-input')?.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase();
+    document.querySelectorAll('.chat-item').forEach(chat => {
+        const name = chat.querySelector('.chat-name').textContent.toLowerCase();
+        const message = chat.querySelector('.chat-message').textContent.toLowerCase();
+        chat.style.display = (name.includes(query) || message.includes(query)) ? 'flex' : 'none';
+    });
+});
+</script>
+
 </body>
 </html>
-<?php
-// Helper функция
-function timeAgo($timestamp) {
-    if (!$timestamp) return '';
-    $time = strtotime($timestamp);
-    $diff = time() - $time;
-    
-    if ($diff < 60) return 'только что';
-    if ($diff < 3600) return floor($diff / 60) . ' мин назад';
-    if ($diff < 86400) return floor($diff / 3600) . ' ч назад';
-    if ($diff < 604800) return floor($diff / 86400) . ' д назад';
-    return date('d.m.Y', $time);
-}
-?>

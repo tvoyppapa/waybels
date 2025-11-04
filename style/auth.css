@@ -1,495 +1,312 @@
-/* ===============================================
-   Общие стили
-   =============================================== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/**
+ * AQUM - Страница авторизации
+ * Дизайн: Левая панель (60%) + Правая форма (40%)
+ * Адаптация под системную тему
+ */
+
+/* ═══════════════════════════════════════════
+   АДАПТАЦИЯ ПОД СИСТЕМНУЮ ТЕМУ
+   ═══════════════════════════════════════════ */
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --auth-bg: #ffffff;
+    --auth-text: #0E0E10;
+    --auth-panel-bg: #ffffff;
+    --auth-panel-border: #f2f2f2;
+    --auth-panel-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    --auth-input-bg: #f9f9f9;
+    --auth-input-border: #e5e5e5;
+    --auth-left-gradient: linear-gradient(135deg, #7F2CDF 0%, #9B5CF9 100%);
+  }
 }
 
-:root {
-  --primary-color: #7F2CDF;
-  --primary-hover: #6A1FC9;
-  --primary-light: #9851E8;
-  --secondary-color: #F5F5F7;
-  --text-primary: #1D1D1F;
-  --text-secondary: #6E6E73;
-  --border-color: #D2D2D7;
-  --error-color: #FF3B30;
-  --success-color: #34C759;
-  --white: #FFFFFF;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+@media (prefers-color-scheme: dark) {
+  :root {
+    --auth-bg: radial-gradient(circle at top left, rgba(127, 44, 223, 0.13), #0E0E10 90%);
+    --auth-text: #ffffff;
+    --auth-panel-bg: rgba(255, 255, 255, 0.06);
+    --auth-panel-border: rgba(255, 255, 255, 0.15);
+    --auth-panel-shadow: 0 8px 32px rgba(127, 44, 223, 0.25);
+    --auth-input-bg: rgba(255, 255, 255, 0.08);
+    --auth-input-border: rgba(255, 255, 255, 0.1);
+    --auth-left-gradient: linear-gradient(135deg, rgba(127, 44, 223, 0.4) 0%, rgba(155, 92, 249, 0.4) 100%);
+  }
 }
 
-body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--secondary-color);
-  color: var(--text-primary);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* ═══════════════════════════════════════════
+   ОСНОВНОЙ КОНТЕЙНЕР
+   ═══════════════════════════════════════════ */
 
-/* ===============================================
-   Контейнер аутентификации
-   =============================================== */
-.auth-container {
+.auth-page {
   display: flex;
   min-height: 100vh;
-}
-
-/* ===============================================
-   Левая часть (промо)
-   =============================================== */
-.auth-left {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-  color: var(--white);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 60px 40px;
-  position: relative;
+  background: var(--auth-bg);
   overflow: hidden;
 }
 
+/* ═══════════════════════════════════════════
+   ЛЕВАЯ ПАНЕЛЬ (60% - Иллюстрация)
+   ═══════════════════════════════════════════ */
+
+.auth-left {
+  flex: 0 0 60%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--auth-left-gradient);
+  overflow: hidden;
+}
+
+/* Фоновые эффекты */
 .auth-left::before {
   content: '';
   position: absolute;
   top: -50%;
-  right: -50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 30% 40%, rgba(127, 44, 223, 0.3), transparent 50%),
+    radial-gradient(circle at 70% 60%, rgba(155, 92, 249, 0.2), transparent 50%);
   animation: float 20s ease-in-out infinite;
 }
 
 @keyframes float {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(-20px, -20px) rotate(5deg); }
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(5deg) scale(1.05); }
 }
 
-.promo-content {
-  max-width: 480px;
-  text-align: center;
+/* Контент левой панели */
+.auth-left-content {
+  position: relative;
   z-index: 1;
+  text-align: center;
+  padding: 60px;
+  max-width: 600px;
 }
 
-.logo {
-  width: 100px;
-  height: 100px;
-  margin-bottom: 32px;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
-  animation: fadeInUp 0.6s ease-out;
+.auth-left-logo {
+  margin-bottom: 40px;
 }
 
-.promo h1 {
+.auth-left-logo svg {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.3));
+}
+
+.auth-left-title {
   font-size: 48px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  letter-spacing: -0.02em;
-  animation: fadeInUp 0.6s ease-out 0.1s backwards;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 20px;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  letter-spacing: -1px;
 }
 
-.promo p {
+.auth-left-subtitle {
   font-size: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 40px;
   font-weight: 400;
-  opacity: 0.95;
-  margin-bottom: 48px;
-  animation: fadeInUp 0.6s ease-out 0.2s backwards;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.features {
-  display: flex;
-  flex-direction: column;
+.auth-left-features {
+  display: grid;
   gap: 20px;
-  text-align: left;
+  margin-top: 48px;
 }
 
-.feature-item {
+.auth-left-feature {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 24px;
-  background: rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border-radius: var(--radius-md);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
   font-size: 16px;
   font-weight: 500;
-  animation: fadeInLeft 0.6s ease-out backwards;
+  text-align: left;
+  transition: all 0.3s ease;
 }
 
-.feature-item:nth-child(1) { animation-delay: 0.3s; }
-.feature-item:nth-child(2) { animation-delay: 0.4s; }
-.feature-item:nth-child(3) { animation-delay: 0.5s; }
+.auth-left-feature:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(8px);
+}
 
-.feature-icon {
-  font-size: 24px;
+.auth-left-feature svg {
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
 }
 
-/* ===============================================
-   Правая часть (формы)
-   =============================================== */
+/* ═══════════════════════════════════════════
+   ПРАВАЯ ПАНЕЛЬ (40% - Форма)
+   ═══════════════════════════════════════════ */
+
 .auth-right {
-  flex: 1;
+  flex: 0 0 40%;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
   padding: 40px;
-  background: var(--white);
+  background: var(--auth-bg);
 }
 
-/* ===============================================
-   Квиз
-   =============================================== */
-.quiz-container {
+.auth-panel {
   width: 100%;
-  max-width: 500px;
-  animation: fadeIn 0.5s ease-out;
+  max-width: 440px;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  background: var(--auth-panel-bg);
+  border: 1px solid var(--auth-panel-border);
+  border-radius: 24px;
+  padding: 48px 40px;
+  box-shadow: var(--auth-panel-shadow);
 }
 
-.quiz-container h2 {
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: var(--text-primary);
-  text-align: center;
+/* Логотип в панели (только mobile) */
+.auth-panel-logo {
+  display: none;
 }
 
-.subtitle {
-  font-size: 16px;
-  color: var(--text-secondary);
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.quiz-form {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-}
-
-.quiz-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 24px 16px;
-  background: var(--white);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
-}
-
-.quiz-btn:hover {
-  border-color: var(--primary-color);
-  background: var(--primary-color);
-  color: var(--white);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-}
-
-.quiz-btn:active {
-  transform: translateY(-2px);
-}
-
-.quiz-icon {
-  font-size: 36px;
-}
-
-.quiz-name {
-  font-size: 15px;
-}
-
-/* ===============================================
-   Форма входа/регистрации
-   =============================================== */
-.form-container {
-  width: 100%;
-  max-width: 420px;
-  animation: fadeIn 0.5s ease-out;
-}
-
-.form-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.form-header h2 {
+/* Заголовок */
+.auth-panel-title {
   font-size: 28px;
   font-weight: 700;
-  margin-bottom: 12px;
-  color: var(--text-primary);
+  color: var(--auth-text);
+  margin-bottom: 8px;
 }
 
-.selected-interest {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--secondary-color);
-  border-radius: 20px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-top: 8px;
-}
-
-.selected-interest strong {
-  color: var(--primary-color);
-}
-
-.reset-interest {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  background: var(--white);
-  border-radius: 50%;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1;
-  transition: var(--transition);
-}
-
-.reset-interest:hover {
-  background: var(--error-color);
-  color: var(--white);
-}
-
-/* ===============================================
-   Google кнопка
-   =============================================== */
-.google-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  padding: 14px 20px;
-  background: var(--white);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
-}
-
-.google-btn:hover {
-  background: var(--secondary-color);
-  border-color: var(--text-secondary);
-  box-shadow: var(--shadow-md);
-}
-
-.google-icon {
-  flex-shrink: 0;
-}
-
-/* ===============================================
-   Разделитель
-   =============================================== */
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: var(--text-secondary);
-  margin: 24px 0;
-  font-size: 14px;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.divider span {
-  padding: 0 16px;
-}
-
-/* ===============================================
-   Формы
-   =============================================== */
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.welcome-subtitle {
-  text-align: center;
-  color: var(--text-secondary);
+.auth-panel-subtitle {
   font-size: 15px;
-  margin-bottom: 20px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
 }
 
-.form-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  text-align: center;
-  color: var(--text-primary);
-}
+/* ═══════════════════════════════════════════
+   PROGRESS BAR
+   ═══════════════════════════════════════════ */
 
-.form-group {
+.auth-progress {
   display: flex;
-  flex-direction: column;
   gap: 8px;
+  margin-bottom: 32px;
 }
 
-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
+.auth-progress-step {
+  flex: 1;
+  height: 4px;
+  background: var(--auth-input-bg);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"] {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  font-size: 16px;
-  font-family: inherit;
-  color: var(--text-primary);
-  background: var(--white);
-  transition: var(--transition);
+.auth-progress-step.active,
+.auth-progress-step.completed {
+  background: linear-gradient(90deg, #7F2CDF 0%, #9B5CF9 100%);
+  box-shadow: 0 0 12px rgba(127, 44, 223, 0.4);
 }
 
-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(127, 44, 223, 0.1);
+/* ═══════════════════════════════════════════
+   ТАБЫ
+   ═══════════════════════════════════════════ */
+
+.auth-tabs {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--auth-input-border);
 }
 
-input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.6;
-}
-
-.form-hint {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-/* ===============================================
-   Кнопки
-   =============================================== */
-.btn-primary {
-  width: 100%;
-  padding: 14px 20px;
-  background: var(--primary-color);
-  color: var(--white);
-  border: none;
-  border-radius: var(--radius-sm);
+.auth-tab {
   font-size: 16px;
   font-weight: 600;
+  color: var(--text-secondary);
+  padding-bottom: 12px;
+  position: relative;
   cursor: pointer;
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
+  transition: color 0.2s ease;
+  border: none;
+  background: none;
+}
+
+.auth-tab:hover {
+  color: var(--auth-text);
+}
+
+.auth-tab.active {
+  color: #7F2CDF;
+}
+
+.auth-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #7F2CDF, #9B5CF9);
+  border-radius: 2px 2px 0 0;
+}
+
+/* ═══════════════════════════════════════════
+   ПЕРЕКЛЮЧАТЕЛЬ EMAIL/ТЕЛЕФОН
+   ═══════════════════════════════════════════ */
+
+.auth-switcher {
   display: flex;
-  align-items: center;
+  gap: 12px;
   justify-content: center;
-  gap: 8px;
+  margin-bottom: 24px;
+  padding: 4px;
+  background: var(--auth-input-bg);
+  border-radius: 12px;
 }
 
-.btn-primary svg {
-  flex-shrink: 0;
-  stroke: currentColor;
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ===============================================
-   Алерты
-   =============================================== */
-.alert {
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
+.auth-switcher-btn {
+  flex: 1;
+  padding: 10px 20px;
   font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 20px;
-  animation: slideDown 0.3s ease-out;
-}
-
-.alert-error {
-  background: #FFF5F5;
-  color: var(--error-color);
-  border: 1px solid var(--error-color);
-}
-
-.alert-success {
-  background: #F0FDF4;
-  color: var(--success-color);
-  border: 1px solid var(--success-color);
-}
-
-/* ===============================================
-   Переключение форм
-   =============================================== */
-.switch-text {
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-}
-
-.switch-text a {
-  color: var(--primary-color);
-  text-decoration: none;
   font-weight: 600;
-  transition: var(--transition);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.switch-text a:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
+.auth-switcher-btn:hover {
+  color: var(--auth-text);
 }
 
-/* ===============================================
-   Анимации
-   =============================================== */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.auth-switcher-btn.active {
+  background: linear-gradient(135deg, #7F2CDF, #9B5CF9);
+  color: white;
+  box-shadow: 0 4px 12px rgba(127, 44, 223, 0.3);
+}
+
+/* ═══════════════════════════════════════════
+   ФОРМЫ
+   ═══════════════════════════════════════════ */
+
+.auth-form {
+  display: none;
+}
+
+.auth-form.active {
+  display: block;
+  animation: fadeInUp 0.4s ease;
 }
 
 @keyframes fadeInUp {
@@ -503,83 +320,278 @@ input::placeholder {
   }
 }
 
-@keyframes fadeInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
+.auth-form-group {
+  margin-bottom: 20px;
+}
+
+.auth-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--auth-text);
+  margin-bottom: 8px;
+}
+
+.auth-form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--auth-input-bg);
+  border: 1px solid var(--auth-input-border);
+  border-radius: 12px;
+  color: var(--auth-text);
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.auth-form-input:focus {
+  outline: none;
+  border-color: #7F2CDF;
+  box-shadow: 0 0 0 3px rgba(127, 44, 223, 0.1);
+  background: var(--auth-panel-bg);
+}
+
+.auth-form-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════
+   КОД ПОДТВЕРЖДЕНИЯ
+   ═══════════════════════════════════════════ */
+
+.code-input-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 32px 0;
+}
+
+.code-input {
+  width: 64px;
+  height: 72px;
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  background: var(--auth-input-bg);
+  border: 2px solid var(--auth-input-border);
+  border-radius: 12px;
+  color: var(--auth-text);
+  transition: all 0.2s ease;
+}
+
+.code-input:focus {
+  outline: none;
+  border-color: #7F2CDF;
+  box-shadow: 0 0 0 3px rgba(127, 44, 223, 0.1);
+  transform: scale(1.05);
+}
+
+.code-input:not(:placeholder-shown) {
+  border-color: #7F2CDF;
+  background: rgba(127, 44, 223, 0.05);
+}
+
+/* ═══════════════════════════════════════════
+   ВЫБОР ИНТЕРЕСОВ
+   ═══════════════════════════════════════════ */
+
+.interests-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.interest-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--auth-input-bg);
+  border: 2px solid var(--auth-input-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.interest-chip:hover {
+  border-color: rgba(127, 44, 223, 0.4);
+  background: rgba(127, 44, 223, 0.05);
+  transform: translateY(-2px);
+}
+
+.interest-chip.selected {
+  border-color: #7F2CDF;
+  background: rgba(127, 44, 223, 0.1);
+  box-shadow: 0 4px 16px rgba(127, 44, 223, 0.2);
+}
+
+.interest-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.interest-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--auth-text);
+}
+
+/* ═══════════════════════════════════════════
+   КНОПКИ
+   ═══════════════════════════════════════════ */
+
+.auth-btn {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.auth-btn-primary {
+  background: linear-gradient(135deg, #7F2CDF, #9B5CF9);
+  color: white;
+  box-shadow: 0 4px 12px rgba(127, 44, 223, 0.3);
+}
+
+.auth-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(127, 44, 223, 0.4);
+}
+
+.auth-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════
+   ССЫЛКИ
+   ═══════════════════════════════════════════ */
+
+.auth-links {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.auth-links a {
+  color: #7F2CDF;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.auth-links a:hover {
+  color: #9B5CF9;
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════
+   АЛЕРТЫ
+   ═══════════════════════════════════════════ */
+
+.auth-alert {
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  backdrop-filter: blur(8px);
+}
+
+.auth-alert-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+}
+
+.auth-alert-success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22C55E;
+}
+
+/* ═══════════════════════════════════════════
+   АДАПТИВ
+   ═══════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .auth-left {
+    flex: 0 0 50%;
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  
+  .auth-right {
+    flex: 0 0 50%;
+  }
+  
+  .auth-left-title {
+    font-size: 40px;
+  }
+  
+  .auth-left-subtitle {
+    font-size: 18px;
   }
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+@media (max-width: 768px) {
+  .auth-page {
+    flex-direction: column;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ===============================================
-   Адаптивность
-   =============================================== */
-@media (max-width: 968px) {
+  
   .auth-left {
     display: none;
   }
   
   .auth-right {
     flex: 1;
-    padding: 32px 20px;
+    padding: 24px 16px;
   }
   
-  .form-container,
-  .quiz-container {
-    max-width: 100%;
+  .auth-panel {
+    padding: 32px 24px;
+  }
+  
+  .auth-panel-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  
+  .auth-panel-logo svg {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .auth-panel-title {
+    font-size: 24px;
+  }
+  
+  .code-input {
+    width: 56px;
+    height: 64px;
+    font-size: 28px;
+  }
+  
+  .interests-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
-  .promo h1 {
-    font-size: 36px;
+  .auth-tabs {
+    gap: 24px;
   }
   
-  .promo p {
-    font-size: 16px;
+  .code-input-container {
+    gap: 8px;
   }
   
-  .form-header h2 {
+  .code-input {
+    width: 52px;
+    height: 60px;
     font-size: 24px;
   }
-  
-  .quiz-form {
-    grid-template-columns: 1fr;
-  }
-  
-  .quiz-btn {
-    flex-direction: row;
-    justify-content: flex-start;
-    padding: 16px 20px;
-  }
-  
-  .quiz-icon {
-    font-size: 28px;
-  }
-}
-
-/* ===============================================
-   Утилиты
-   =============================================== */
-.hidden {
-  display: none !important;
-}
-
-.loading {
-  opacity: 0.6;
-  pointer-events: none;
 }

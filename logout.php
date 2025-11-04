@@ -1,21 +1,21 @@
 <?php
 /**
- * Выход из системы
+ * AQUM - Выход из системы
  */
 
 session_start();
 
-// Уничтожаем все данные сессии
-$_SESSION = array();
+// Очистка сессии
+$_SESSION = [];
 
-// Удаляем cookie сессии
+// Удаление cookie сессии
 if (isset($_COOKIE[session_name()])) {
-    setcookie(session_name(), '', time() - 42000, '/');
+    setcookie(session_name(), '', time() - 3600, '/');
 }
 
-// Уничтожаем сессию
+// Уничтожение сессии
 session_destroy();
 
-// Перенаправляем на главную страницу
-header("Location: index.php");
+// Редирект на страницу входа
+header('Location: auth.php');
 exit;
