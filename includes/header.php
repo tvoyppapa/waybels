@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="/style/aqum_main.css">
+    <link rel="stylesheet" href="/style/main.css">
     <?php if (isset($additional_css)): ?>
         <?php foreach ((array)$additional_css as $css): ?>
             <link rel="stylesheet" href="<?= $css ?>">

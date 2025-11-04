@@ -4,9 +4,9 @@
  * Уведомления + Задания + Посты преподавателей
  */
 
-require_once 'config_aqum.php';
-require_once 'db_aqum.php';
-require_once 'helpers_aqum.php';
+require_once 'config.php';
+require_once 'db.php';
+require_once 'helpers.php';
 
 session_start();
 requireAuth();
@@ -106,10 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
 $page_title = "Главная - AQUM";
 $current_page = 'feed';
 ?>
-<?php include 'includes/header_aqum.php'; ?>
+<?php include 'includes/header.php'; ?>
 
 <div class="app-container">
-    <?php include 'includes/sidebar_aqum.php'; ?>
+    <?php include 'includes/sidebar.php'; ?>
     
     <main class="main-content">
         <div class="content-wrapper">
@@ -302,4 +302,4 @@ document.querySelectorAll('.like-btn').forEach(btn => {
 }
 </style>
 
-<?php include 'includes/footer_aqum.php'; ?>
+<?php include 'includes/footer.php'; ?>
