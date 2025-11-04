@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация - WayBels</title>
+    <title>Регистрация - <?= APP_NAME ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style/auth.css">
 </head>
@@ -93,9 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- Левая часть -->
     <div class="auth-left">
         <div class="promo-content">
-            <img src="img/logo.svg" alt="WayBels" class="logo">
+            <img src="img/logo.svg" alt="<?= APP_NAME ?>" class="logo">
             <div class="promo">
-                <h1>WayBels</h1>
+                <h1><?= APP_NAME ?></h1>
                 <p>Пространство, где знание превращается в опыт</p>
             </div>
             

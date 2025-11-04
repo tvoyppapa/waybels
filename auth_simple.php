@@ -1,17 +1,16 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+require_once 'config.php';
 session_start();
 
 // Подключение к БД
-$host = "localhost";
-$dbname = "wibs";
-$username = "root";
-$password = "WayBels2553030App!";
-
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', DB_HOST, DB_NAME, DB_CHARSET);
+    $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
 } catch (PDOException $e) {
     die("Ошибка БД: " . $e->getMessage());
 }
@@ -100,7 +99,7 @@ if (isset($_POST['register'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход - WayBels</title>
+    <title>Вход - <?= APP_NAME ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style/auth.css">
 </head>
@@ -122,7 +121,7 @@ if (isset($_POST['register'])) {
     <!-- Левая часть -->
     <div class="auth-left">
         <div class="promo-content">
-            <img src="img/logo-white.svg" alt="WayBels" class="logo">
+            <img src="img/logo-white.svg" alt="<?= APP_NAME ?>" class="logo">
         </div>
     </div>
     

@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WayBels - Найди своего репетитора</title>
+    <title><?= APP_NAME ?> - Найди своего репетитора</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
     <!-- Боковое меню (Desktop) -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <img src="img/logo-white.svg" alt="WayBels" class="sidebar-logo">
+            <img src="img/logo-white.svg" alt="<?= APP_NAME ?>" class="sidebar-logo">
         </div>
         
         <nav class="sidebar-nav">
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_favorite'])) {
         <!-- Хедер с поиском -->
         <header class="header">
             <div class="header-left">
-                <img src="img/logo-white.svg" alt="WayBels" class="mobile-logo">
+                <img src="img/logo-white.svg" alt="<?= APP_NAME ?>" class="mobile-logo">
                 <h1>Репетиторы</h1>
             </div>
             

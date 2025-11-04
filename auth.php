@@ -9,7 +9,7 @@ require_once 'auth_handler.php';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Вход - WayBels</title>
+  <title>Вход - <?= APP_NAME ?></title>
   
   <!-- ОТЛАДКА -->
   <style>
@@ -52,7 +52,7 @@ require_once 'auth_handler.php';
   <!-- Левая часть с логотипом -->
   <div class="auth-left">
     <div class="promo-content">
-      <img src="img/logo-white.svg" alt="WayBels" class="logo">
+        <img src="img/logo-white.svg" alt="<?= APP_NAME ?>" class="logo">
     </div>
   </div>
   
