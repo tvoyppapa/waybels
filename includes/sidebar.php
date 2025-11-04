@@ -1,6 +1,6 @@
 <aside class="sidebar">
     <div class="sidebar-header">
-        <img src="/img/logo-white.svg" alt="WayBels" class="sidebar-logo">
+        <img src="/img/logo-white.svg" alt="<?= APP_NAME ?>" class="sidebar-logo">
     </div>
     
     <nav class="sidebar-nav">

@@ -583,3 +583,20 @@ input::placeholder {
   opacity: 0.6;
   pointer-events: none;
 }
+
+.selected-interest.hint {
+  background: transparent;
+  padding: 0;
+  margin-top: 16px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.selected-interest.hint span {
+  display: block;
+  line-height: 1.5;
+}
+
+.interest-alert {
+  margin-top: 12px;
+}

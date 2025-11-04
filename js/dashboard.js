@@ -1,5 +1,5 @@
 /**
- * WayBels Dashboard JavaScript
+ * Aqum Dashboard JavaScript
  */
 
 document.addEventListener('DOMContentLoaded', function() {

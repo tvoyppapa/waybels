@@ -3,10 +3,6 @@
  * Логика аутентификации и регистрации
  */
 
-// ОТЛАДКА - удалить в продакшене
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once 'config.php';
 require_once 'db.php';
 require_once 'helpers.php';
@@ -16,11 +12,16 @@ session_start();
 // Инициализация переменных
 $error = null;
 $success = null;
-$currentView = 'quiz'; // quiz, login, register
+$currentView = 'login';
+$interestsSelected = isset($_SESSION['interests']);
 
-// Определяем текущий вид
-if (isset($_SESSION['interests'])) {
-    $currentView = 'login';
+if (isset($_SESSION['auth_view'])) {
+    $currentView = $_SESSION['auth_view'];
+    unset($_SESSION['auth_view']);
+}
+
+if (isset($_GET['view']) && in_array($_GET['view'], ['login', 'register'], true)) {
+    $currentView = $_GET['view'];
 }
 
 // ОТЛАДКА
@@ -45,14 +46,16 @@ if ($flash) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['interests'])) {
     if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
         $error = "Ошибка безопасности. Попробуйте еще раз.";
+        $currentView = 'register';
     } else {
         $interests = $_POST['interests'];
         if (array_key_exists($interests, INTEREST_CATEGORIES)) {
             $_SESSION['interests'] = $interests;
-            $currentView = 'login';
+            $_SESSION['auth_view'] = 'register';
             redirect($_SERVER['PHP_SELF']);
         } else {
             $error = "Неверная категория";
+            $currentView = 'register';
         }
     }
 }
@@ -61,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['interests'])) {
  * Обработка входа
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+    $currentView = 'login';
     // CSRF проверка
     if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
         $error = "Ошибка безопасности. Попробуйте еще раз.";
@@ -108,6 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
  * Обработка регистрации
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
+    $currentView = 'register';
     // CSRF проверка
     if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
         $error = "Ошибка безопасности. Попробуйте еще раз.";
@@ -131,6 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         $passwordErrors = validatePassword($password);
         if (!empty($passwordErrors)) {
             $errors = array_merge($errors, $passwordErrors);
+        }
+
+        if (!$interests || !array_key_exists($interests, INTEREST_CATEGORIES)) {
+            $errors[] = "Выберите направление, которое вам интересно";
         }
         
         if (!empty($errors)) {
@@ -197,5 +206,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
  */
 if (isset($_GET['reset'])) {
     unset($_SESSION['interests']);
+    $_SESSION['auth_view'] = 'register';
     redirect($_SERVER['PHP_SELF']);
 }
+
+$interestsSelected = isset($_SESSION['interests']);
