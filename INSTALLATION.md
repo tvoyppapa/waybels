@@ -1,301 +1,130 @@
-# 📦 Установка WayBels
+# 📦 УСТАНОВКА AQUM
 
-## Быстрая установка (5 минут)
+## 🚨 ЕСЛИ ОШИБКА "username not found"
 
-### Шаг 1: Импорт базы данных
+### Выполни этот SQL (копируй в phpMyAdmin):
 
-**Через командную строку:**
-```bash
-mysql -u root -p
-```
-
-Затем:
 ```sql
-source /path/to/workspace/database_waybels.sql
+USE aqum_db;
+
+-- Добавляем username
+ALTER TABLE users ADD COLUMN username VARCHAR(50) NULL AFTER name;
+
+-- Заполняем
+UPDATE users SET username = CONCAT('user', id);
+
+-- Делаем NOT NULL и UNIQUE
+ALTER TABLE users MODIFY COLUMN username VARCHAR(50) NOT NULL;
+CREATE UNIQUE INDEX unique_username ON users(username);
+
+-- Добавляем theme
+ALTER TABLE users ADD COLUMN theme VARCHAR(20) DEFAULT 'auto' AFTER bio;
+
+-- Удаляем nickname
+ALTER TABLE users DROP COLUMN nickname;
+
+-- Проверяем
+SELECT id, name, username, email FROM users;
 ```
 
-**Через phpMyAdmin:**
-1. Откройте phpMyAdmin
-2. Создайте новую базу данных `waybels_db`
-3. Выберите её
-4. Перейдите во вкладку "Импорт"
-5. Выберите файл `database_waybels.sql`
-6. Нажмите "Вперед"
-
-### Шаг 2: Проверьте настройки подключения
-
-Файл `db.php` должен содержать:
-```php
-$host = "localhost";
-$dbname = "waybels_db";
-$username = "root";
-$password = "WayBels2553030App!";
-```
-
-Если ваш пароль MySQL другой, измените его!
-
-### Шаг 3: Создайте необходимые папки
-
+**Или используй файл:**
 ```bash
-cd /workspace
-mkdir -p img/avatars
-chmod 755 img/avatars
+mysql -u root -p aqum_db < ADD_USERNAME_SIMPLE.sql
 ```
-
-### Шаг 4: Запустите сервер
-
-**Вариант 1: Встроенный PHP сервер**
-```bash
-cd /workspace
-php -S localhost:8000
-```
-
-Откройте: `http://localhost:8000`
-
-**Вариант 2: Apache/Nginx**
-1. Настройте виртуальный хост
-2. DocumentRoot: `/workspace`
-3. Убедитесь, что mod_rewrite включен
-
-**Вариант 3: XAMPP/MAMP**
-1. Скопируйте проект в `htdocs/waybels`
-2. Откройте: `http://localhost/waybels`
-
-### Шаг 5: Войдите в систему
-
-Используйте тестовый аккаунт:
-- **Email:** `test@example.com`
-- **Пароль:** `password`
 
 ---
 
-## 🎯 Проверка установки
+## 🚨 ЕСЛИ ОШИБКА "assignments not found"
 
-### 1. Проверьте подключение к БД
-Откройте `http://localhost:8000/db_test.php`
-
-Создайте файл `/workspace/db_test.php`:
-```php
-<?php
-require_once 'db.php';
-try {
-    $stmt = $pdo->query("SELECT COUNT(*) as count FROM users");
-    $result = $stmt->fetch();
-    echo "✅ Подключение успешно! Пользователей в БД: " . $result['count'];
-} catch (Exception $e) {
-    echo "❌ Ошибка: " . $e->getMessage();
-}
-?>
-```
-
-### 2. Проверьте таблицы
 ```sql
-USE waybels_db;
-SHOW TABLES;
+USE aqum_db;
+
+CREATE TABLE IF NOT EXISTS assignments (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT UNSIGNED NOT NULL,
+    student_id INT UNSIGNED NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    due_date DATETIME NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS stories (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    media_url VARCHAR(500) NOT NULL,
+    media_type VARCHAR(20) DEFAULT 'image',
+    caption TEXT NULL,
+    views_count INT UNSIGNED DEFAULT 0,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
-
-Должны быть таблицы:
-- users
-- teacher_profiles
-- posts
-- favorites
-- chats
-- messages
-- teacher_applications
-
-### 3. Проверьте тестовые данные
-```sql
-SELECT * FROM users;
-SELECT * FROM teacher_profiles;
-```
-
-Должно быть:
-- 7 пользователей
-- 5 репетиторов
 
 ---
 
-## 🔧 Настройка для продакшена
+## 📝 Полная установка с нуля
 
-### 1. Измените пароль БД
-```sql
-CREATE USER 'waybels_user'@'localhost' IDENTIFIED BY 'strong_password_here';
-GRANT SELECT, INSERT, UPDATE, DELETE ON waybels_db.* TO 'waybels_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-Обновите `db.php`:
-```php
-$username = "waybels_user";
-$password = "strong_password_here";
-```
-
-### 2. Отключите отображение ошибок
-В `config.php`:
-```php
-error_reporting(0);
-ini_set('display_errors', 0);
-```
-
-### 3. Включите HTTPS
-В `.htaccess` раскомментируйте:
-```apache
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-```
-
-### 4. Настройте загрузку файлов
-Создайте папки:
+### 1. Создать БД
 ```bash
-mkdir -p uploads/avatars uploads/videos uploads/documents
-chmod 755 uploads
-chmod 755 uploads/avatars
-chmod 755 uploads/videos
-chmod 755 uploads/documents
+mysql -u root -p < RESET_DATABASE.sql
 ```
 
-### 5. Настройте логирование
-```php
-// В config.php
-ini_set('error_log', '/var/log/waybels/error.log');
-```
-
----
-
-## 🐛 Решение проблем
-
-### Проблема: "Ошибка подключения к БД"
-**Решение:**
-1. Проверьте, запущен ли MySQL:
-   ```bash
-   sudo systemctl status mysql
-   ```
-2. Проверьте пароль в `db.php`
-3. Убедитесь, что база `waybels_db` существует
-
-### Проблема: "Call to undefined function password_verify()"
-**Решение:**
-Обновите PHP до версии 7.4+:
+### 2. Добавить username
 ```bash
-php -v
+mysql -u root -p aqum_db < ADD_USERNAME_SIMPLE.sql
 ```
 
-### Проблема: CSS/JS не загружаются
-**Решение:**
-1. Проверьте пути в файлах
-2. Убедитесь, что папки `style/` и `js/` существуют
-3. Проверьте права доступа:
-   ```bash
-   chmod 644 style/*.css
-   chmod 644 js/*.js
-   ```
-
-### Проблема: Изображения не отображаются
-**Решение:**
-1. Создайте папку `img/`:
-   ```bash
-   mkdir -p img/avatars
-   ```
-2. Проверьте пути к изображениям
-3. Убедитесь в наличии `img/logo-white.svg`
-
-### Проблема: "Headers already sent"
-**Решение:**
-1. Уберите пробелы до `<?php`
-2. Проверьте кодировку файлов (UTF-8 без BOM)
-3. Не выводите ничего до `redirect()`
-
-### Проблема: Сессия не работает
-**Решение:**
-1. Проверьте права на папку сессий:
-   ```bash
-   sudo chmod 1777 /tmp
-   ```
-2. Проверьте настройки PHP:
-   ```php
-   <?php phpinfo(); ?>
-   ```
-   Найдите `session.save_path`
-
----
-
-## 📊 Проверочный чеклист
-
-- [ ] MySQL запущен
-- [ ] База `waybels_db` создана
-- [ ] Таблицы импортированы (7 таблиц)
-- [ ] Тестовые данные присутствуют
-- [ ] PHP 7.4+ установлен
-- [ ] Папка `img/avatars` создана
-- [ ] Файл `db.php` настроен правильно
-- [ ] Сервер запущен
-- [ ] Можно войти через `test@example.com`
-- [ ] Страница dashboard открывается
-- [ ] Видны карточки репетиторов
-- [ ] Можно добавить в избранное
-- [ ] Можно открыть профиль
-
----
-
-## 🎨 Кастомизация
-
-### Изменить логотип:
-Замените файлы:
-- `/img/logo.svg` (цветной)
-- `/img/logo-white.svg` (белый для sidebar)
-
-### Изменить цвета:
-В `/style/dashboard.css`:
-```css
-:root {
-  --primary: #7F2CDF;        /* Ваш цвет */
-  --primary-dark: #6A1FC9;   /* Темнее */
-  --primary-light: #9851E8;  /* Светлее */
-}
-```
-
-### Изменить название:
-В `/config.php`:
-```php
-define('APP_NAME', 'Ваше название');
-```
-
----
-
-## 📞 Дополнительная помощь
-
-### Логи ошибок:
+### 3. Вставить пользователей
 ```bash
-# Apache
-tail -f /var/log/apache2/error.log
-
-# Nginx
-tail -f /var/log/nginx/error.log
-
-# PHP
-tail -f /var/log/php_errors.log
+mysql -u root -p aqum_db < QUICK_INSERT_USERS.sql
 ```
 
-### Отладка SQL:
-```php
-try {
-    $stmt = $pdo->query("YOUR QUERY");
-} catch (PDOException $e) {
-    echo $e->getMessage();
-    var_dump($stmt->errorInfo());
-}
+### 4. Включить mod_rewrite
+```bash
+sudo a2enmod rewrite
+sudo systemctl restart apache2
 ```
 
-### Отладка сессий:
-```php
-<?php
-session_start();
-echo '<pre>';
-print_r($_SESSION);
-echo '</pre>';
-?>
-```
+### 5. Готово!
+Откройте: `http://ваш-домен/auth.php`
 
 ---
 
-**Готово! Платформа WayBels установлена и готова к использованию! 🎉**
+## 🎯 Тестовые аккаунты
+
+| Email | Username | Password |
+|-------|----------|----------|
+| test@test.com | test | password |
+| ivan@aqum.com | ivan | password |
+| maria@aqum.com | maria | password |
+
+**Профили:**
+- `/@test`
+- `/@ivan`
+- `/@maria`
+
+---
+
+## 🔧 Если что-то не работает
+
+### URL не работают (/@username)
+```bash
+sudo a2enmod rewrite
+sudo systemctl restart apache2
+```
+
+### Меню синее вместо белого
+Очисти кеш браузера: `Ctrl+Shift+R`
+
+### profile.php редиректит на feed
+Обнови `profile.php` из репозитория
+
+---
+
+**Все работает!** 🚀
