@@ -63,46 +63,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $loginType = $_POST['login_type'] ?? 'email';
         $password = $_POST['password'] ?? '';
         
+        // Упрощенная валидация - ТОЛЬКО EMAIL
         if (empty($name) || empty($login) || empty($password)) {
             $_SESSION['error'] = 'Заполните все поля';
         } elseif (!preg_match('/^[а-яёА-ЯЁa-zA-Z\s\-]+$/u', $name)) {
             $_SESSION['error'] = 'Имя может содержать только буквы';
+        } elseif (!filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['error'] = 'Введите корректный email';
         } elseif (strlen($password) < 6) {
             $_SESSION['error'] = 'Пароль минимум 6 символов';
         } else {
             try {
-                $isEmail = ($loginType === 'email');
-                
-                if ($isEmail) {
-                    if (!filter_var($login, FILTER_VALIDATE_EMAIL)) {
-                        $_SESSION['error'] = 'Неверный формат email';
-                    } else {
-                        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-                        $stmt->execute([$login]);
-                        if ($stmt->fetch()) {
-                            $_SESSION['error'] = 'Email уже занят';
-                        }
-                    }
-                } else {
-                    $cleanPhone = preg_replace('/[^\d+]/', '', $login);
-                    if (strlen($cleanPhone) < 11) {
-                        $_SESSION['error'] = 'Введите корректный номер телефона';
-                    } else {
-                        $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
-                        $stmt->execute([$cleanPhone]);
-                        if ($stmt->fetch()) {
-                            $_SESSION['error'] = 'Телефон уже занят';
-                        }
-                    }
+                // Проверка существования email
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                $stmt->execute([$login]);
+                if ($stmt->fetch()) {
+                    $_SESSION['error'] = 'Email уже занят';
                 }
                 
                 if (!isset($_SESSION['error'])) {
-                    // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ СРАЗУ
+                    // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ
                     $formattedName = mb_convert_case(mb_strtolower($name), MB_CASE_TITLE, 'UTF-8');
                     $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-                    
-                    $emailValue = $isEmail ? $login : null;
-                    $phoneValue = !$isEmail ? $cleanPhone : null;
                     
                     // Генерируем уникальный username
                     $baseUsername = strtolower(preg_replace('/[^a-z0-9]/i', '', transliterate($name)));
@@ -121,14 +103,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     $stmt = $pdo->prepare("
-                        INSERT INTO users (name, username, email, phone, password, role, created_at) 
-                        VALUES (?, ?, ?, ?, ?, 'user', NOW())
+                        INSERT INTO users (name, username, email, password, role, created_at) 
+                        VALUES (?, ?, ?, ?, 'user', NOW())
                     ");
                     $stmt->execute([
                         $formattedName,
                         $username,
-                        $emailValue,
-                        $phoneValue,
+                        $login, // используем $login (это email)
                         $hashedPassword
                     ]);
                     
@@ -137,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // ЛОГИНИМ
                     $_SESSION['user_id'] = $userId;
                     $_SESSION['user_name'] = $formattedName;
-                    $_SESSION['user_email'] = $emailValue;
+                    $_SESSION['user_email'] = $login;
                     $_SESSION['user_role'] = 'user';
                     
                     // Флаг что нужно выбрать интересы на feed.php
