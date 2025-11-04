@@ -1,13 +1,15 @@
 <?php
 /**
- * Универсальное боковое меню (Desktop)
+ * Компактное боковое меню (только иконки)
  */
 $current_page = basename($_SERVER['PHP_SELF']);
 $compact_mode = isset($compact) && $compact === true;
 ?>
-<aside class="sidebar <?= $compact_mode ? 'sidebar-compact' : '' ?>">
+<aside class="sidebar">
     <div class="sidebar-header">
-        <img src="/img/logo-white.svg" alt="aqum" class="sidebar-logo">
+        <a href="/feed.php">
+            <img src="/img/logo-white.svg" alt="aqum" class="sidebar-logo">
+        </a>
     </div>
     
     <nav class="sidebar-nav">
@@ -18,9 +20,6 @@ $compact_mode = isset($compact) && $compact === true;
                 <line x1="9" y1="13" x2="15" y2="13"/>
                 <line x1="9" y1="17" x2="13" y2="17"/>
             </svg>
-            <?php if (!$compact_mode): ?>
-            <span>Лента</span>
-            <?php endif; ?>
         </a>
         
         <a href="/search.php" class="nav-item <?= $current_page === 'search.php' ? 'active' : '' ?>" title="Поиск">
@@ -28,28 +27,19 @@ $compact_mode = isset($compact) && $compact === true;
                 <circle cx="11" cy="11" r="8"/>
                 <path d="m21 21-4.35-4.35"/>
             </svg>
-            <?php if (!$compact_mode): ?>
-            <span>Поиск</span>
-            <?php endif; ?>
         </a>
         
         <a href="/messages.php" class="nav-item <?= $current_page === 'messages.php' ? 'active' : '' ?>" title="Сообщения">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
-            <?php if (!$compact_mode): ?>
-            <span>Сообщения</span>
-            <?php endif; ?>
         </a>
         
-        <a href="/profile.php?user=<?= $_SESSION['user_id'] ?? '' ?>" class="nav-item <?= $current_page === 'profile.php' ? 'active' : '' ?>" title="Профиль">
+        <a href="/profile.php" class="nav-item <?= $current_page === 'profile.php' ? 'active' : '' ?>" title="Профиль">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
             </svg>
-            <?php if (!$compact_mode): ?>
-            <span>Профиль</span>
-            <?php endif; ?>
         </a>
     </nav>
     
@@ -67,9 +57,133 @@ $compact_mode = isset($compact) && $compact === true;
                 <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
             </svg>
-            <?php if (!$compact_mode): ?>
-            <span class="theme-text">Тема</span>
-            <?php endif; ?>
         </button>
     </div>
 </aside>
+
+<style>
+/* КОМПАКТНЫЙ SIDEBAR - ТОЛЬКО ИКОНКИ */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    z-index: 1000;
+    box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+}
+
+.sidebar-header {
+    margin-bottom: 40px;
+}
+
+.sidebar-header a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-logo {
+    width: 42px;
+    height: 42px;
+    transition: transform 0.3s;
+}
+
+.sidebar-logo:hover {
+    transform: scale(1.1);
+}
+
+.sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    align-items: center;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    transform: scale(1.1);
+}
+
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.nav-item.active::after {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 24px;
+    background: white;
+    border-radius: 0 4px 4px 0;
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.sidebar-footer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 12px;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    transform: scale(1.1);
+}
+
+.theme-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Адаптация для мобилки - скрываем sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+}
+</style>

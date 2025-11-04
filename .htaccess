@@ -1,90 +1,38 @@
-# Apache конфигурация для Wibs
+RewriteEngine On
+RewriteBase /
 
-# Включаем mod_rewrite
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    
-    # Редирект с www на без www (опционально)
-    # RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
-    # RewriteRule ^(.*)$ http://%1/$1 [R=301,L]
-    
-    # Редирект на HTTPS (для продакшена)
-    # RewriteCond %{HTTPS} off
-    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-</IfModule>
-
-# Настройки PHP
-<IfModule mod_php.c>
-    # Увеличиваем лимит памяти
-    php_value memory_limit 256M
-    
-    # Увеличиваем время выполнения
-    php_value max_execution_time 300
-    
-    # Настройки загрузки файлов
-    php_value upload_max_filesize 10M
-    php_value post_max_size 10M
-    
-    # Кодировка по умолчанию
-    php_value default_charset UTF-8
-</IfModule>
-
-# Безопасность
-<IfModule mod_headers.c>
-    # Защита от XSS
-    Header set X-XSS-Protection "1; mode=block"
-    
-    # Защита от clickjacking
-    Header always append X-Frame-Options SAMEORIGIN
-    
-    # Запрет определения типа контента
-    Header set X-Content-Type-Options nosniff
-    
-    # Content Security Policy (настройте под свои нужды)
-    # Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com;"
-</IfModule>
-
-# Кеширование
-<IfModule mod_expires.c>
-    ExpiresActive On
-    
-    # CSS и JavaScript
-    ExpiresByType text/css "access plus 1 month"
-    ExpiresByType application/javascript "access plus 1 month"
-    
-    # Изображения
-    ExpiresByType image/jpeg "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
-    ExpiresByType image/svg+xml "access plus 1 year"
-    
-    # Шрифты
-    ExpiresByType font/woff2 "access plus 1 year"
-</IfModule>
-
-# Сжатие
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
-</IfModule>
-
-# Запрет доступа к служебным файлам
-<FilesMatch "^\.">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Защита конфигурационных файлов
-<FilesMatch "\.(htaccess|htpasswd|ini|log|sql)$">
+# Защита от прямого доступа к файлам конфигурации
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
 
-# Индексный файл по умолчанию
-DirectoryIndex index.php index.html
+# ====================================
+# ЧИСТЫЕ URL ДЛЯ ПРОФИЛЕЙ
+# ====================================
 
-# Отключение листинга директорий
-Options -Indexes
+# /@username -> profile.php?user=username
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^@([a-zA-Z0-9_]+)$ profile.php?user=$1 [L,QSA]
 
-# Обработка ошибок
-ErrorDocument 404 /404.html
-ErrorDocument 403 /403.html
-ErrorDocument 500 /500.html
+# Альтернативный вариант без @
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9_]+)$ profile.php?user=$1 [L,QSA]
+
+# ====================================
+# ОСТАЛЬНЫЕ ПРАВИЛА
+# ====================================
+
+# Редирект с index.php на feed.php для авторизованных
+# (обрабатывается в самом index.php)
+
+# Принудительный HTTPS (раскомментировать при необходимости)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Убираем trailing slash
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} (.+)/$
+RewriteRule ^ %1 [R=301,L]

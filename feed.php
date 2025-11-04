@@ -17,20 +17,9 @@ $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $current_user = $stmt->fetch();
 
-// Проверяем нужно ли показать модальное окно с интересами
-$showInterestsModal = isset($_SESSION['needs_interests']) || empty($current_user['interests']);
-
-// Обработка сохранения интересов
-if (isset($_POST['save_interests'])) {
-    $interests = $_POST['interests'] ?? [];
-    if (!empty($interests)) {
-        $interestsString = implode(',', $interests);
-        $stmt = $pdo->prepare("UPDATE users SET interests = ? WHERE id = ?");
-        $stmt->execute([$interestsString, $user_id]);
-        unset($_SESSION['needs_interests']);
-        header('Location: feed.php');
-        exit;
-    }
+// Убираем флаг интересов если он есть
+if (isset($_SESSION['needs_interests'])) {
+    unset($_SESSION['needs_interests']);
 }
 
 // Получаем задания пользователя
@@ -132,14 +121,13 @@ include 'includes/layout.php';
                 <line x1="9" y1="9" x2="15" y2="9"/>
             </svg>
             <h3>Пока нет постов</h3>
-            <p>Выберите интересы или подпишитесь на репетиторов</p>
-            <button onclick="showInterestsModal()" class="btn btn-primary">Выбрать интересы</button>
+            <p>Подпишитесь на репетиторов чтобы видеть их контент</p>
         </div>
         <?php else: ?>
             <?php foreach ($posts as $post): ?>
             <article class="post" data-post-id="<?= $post['id'] ?>">
                 <div class="post-header">
-                    <a href="/profile.php?user=<?= $post['teacher_id'] ?>" class="post-author">
+                    <a href="/@<?= e($post['author_username']) ?>" class="post-author">
                         <img src="<?= e($post['author_avatar']) ?>" alt="<?= e($post['author_name']) ?>" class="post-avatar">
                         <div class="post-author-info">
                             <div class="post-author-name"><?= e($post['author_name']) ?></div>
@@ -205,36 +193,6 @@ include 'includes/layout.php';
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО ИНТЕРЕСОВ -->
-<?php if ($showInterestsModal): ?>
-<div class="modal-overlay" id="interestsModal">
-    <div class="modal-content">
-        <button class="modal-close" onclick="closeInterestsModal()">×</button>
-        
-        <h2>Выберите интересы</h2>
-        <p class="modal-subtitle">Это поможет подобрать персонализированный контент</p>
-        
-        <form method="POST" id="interests-form">
-            <div class="interests-modal-grid">
-                <?php foreach (INTEREST_CATEGORIES as $key => $data): ?>
-                    <label class="interest-modal-item">
-                        <input type="checkbox" name="interests[]" value="<?php echo $key; ?>" <?= in_array($key, $userInterests) ? 'checked' : '' ?>>
-                        <span class="interest-modal-box">
-                            <span class="icon"><?php echo $data['icon']; ?></span>
-                            <span class="name"><?php echo $data['name']; ?></span>
-                        </span>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-            
-            <div class="modal-actions">
-                <button type="submit" name="save_interests" class="btn btn-primary">Сохранить</button>
-                <button type="button" onclick="closeInterestsModal()" class="btn btn-link">Пропустить</button>
-            </div>
-        </form>
-    </div>
-</div>
-<?php endif; ?>
 
 <?php include 'includes/layout_footer.php'; ?>
 
@@ -638,15 +596,6 @@ include 'includes/layout.php';
 </style>
 
 <script>
-// Закрытие модального окна
-function closeInterestsModal() {
-    document.getElementById('interestsModal')?.remove();
-}
-
-function showInterestsModal() {
-    window.location.href = 'feed.php';
-}
-
 // Лайки
 document.querySelectorAll('.like-btn').forEach(btn => {
     btn.addEventListener('click', function() {

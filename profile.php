@@ -20,7 +20,7 @@ if ($username && is_numeric($username)) {
     $stmt->execute([$username]);
     $result = $stmt->fetch();
     if ($result) {
-        header('Location: profile.php?user=' . $result['username']);
+        header('Location: /@' . $result['username']);
         exit;
     }
 }
@@ -31,7 +31,7 @@ if (!$username) {
     $stmt->execute([$current_user_id]);
     $result = $stmt->fetch();
     if ($result) {
-        header('Location: profile.php?user=' . $result['username']);
+        header('Location: /@' . $result['username']);
         exit;
     }
 }
@@ -81,7 +81,7 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
         $stmt->execute([$name, $bio, $current_user_id]);
         
         $_SESSION['success'] = 'Профиль обновлен';
-        header('Location: profile.php?user=' . $username);
+        header('Location: /@' . $username);
         exit;
     }
 }
