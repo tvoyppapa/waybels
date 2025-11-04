@@ -11,7 +11,7 @@ require_once 'config.php';
 require_once 'db.php';
 require_once 'helpers.php';
 
-// Получаем ошибки из сессии и очищаем (БЕЗ success!)
+// Получаем ошибки из сессии и очищаем
 $error = $_SESSION['error'] ?? '';
 unset($_SESSION['error']);
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // === РЕГИСТРАЦИЯ ШАГ 1 ===
+    // === РЕГИСТРАЦИЯ ШАГ 1: Основные данные → СРАЗУ НА ИНТЕРЕСЫ ===
     elseif (isset($_POST['register_step1'])) {
         $name = trim($_POST['name'] ?? '');
         $login = trim($_POST['login'] ?? '');
@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'is_email' => $isEmail,
                         'password' => password_hash($password, PASSWORD_BCRYPT)
                     ];
-                    $_SESSION['registration_step'] = 'age';
+                    $_SESSION['registration_step'] = 'interests';
                 }
             } catch (PDOException $e) {
                 $_SESSION['error'] = 'Ошибка: ' . $e->getMessage();
@@ -121,23 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // === РЕГИСТРАЦИЯ ШАГ 2: ВОЗРАСТ ===
+    // === РЕГИСТРАЦИЯ ШАГ 2: ИНТЕРЕСЫ ===
     elseif (isset($_POST['register_step2'])) {
-        $age = (int)($_POST['age'] ?? 0);
-        
-        if ($age < 13 || $age > 100) {
-            $_SESSION['error'] = 'Возраст должен быть от 13 до 100';
-        } else {
-            $_SESSION['registration_data']['age'] = $age;
-            $_SESSION['registration_step'] = 'interests';
-        }
-        
-        header('Location: auth.php');
-        exit;
-    }
-    
-    // === РЕГИСТРАЦИЯ ШАГ 3: ИНТЕРЕСЫ ===
-    elseif (isset($_POST['register_step3'])) {
         $interests = $_POST['interests'] ?? [];
         
         if (empty($interests)) {
@@ -154,15 +139,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $phoneValue = !$regData['is_email'] ? $regData['login'] : null;
             
             $stmt = $pdo->prepare("
-                INSERT INTO users (name, email, phone, password, age, interests, role, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, 'user', NOW())
+                INSERT INTO users (name, email, phone, password, interests, role, created_at) 
+                VALUES (?, ?, ?, ?, ?, 'user', NOW())
             ");
             $stmt->execute([
                 $regData['name'],
                 $emailValue,
                 $phoneValue,
                 $regData['password'],
-                $regData['age'],
                 $interestsString
             ]);
             
@@ -228,28 +212,11 @@ $currentStep = $_SESSION['registration_step'] ?? null;
                     <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
 
-                <?php if ($currentStep === 'age'): ?>
-                    <!-- ШАГ 2: ВОЗРАСТ -->
-                    <form method="POST" class="auth-form">
-                        <h2>Ваш возраст</h2>
-                        <p class="subtitle">Укажите ваш возраст для персонализации</p>
-                        
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 66%;"></div>
-                        </div>
-
-                        <div class="form-group">
-                            <input type="number" name="age" min="13" max="100" placeholder="Ваш возраст" required autofocus>
-                        </div>
-
-                        <button type="submit" name="register_step2" class="btn btn-primary">Продолжить</button>
-                    </form>
-
-                <?php elseif ($currentStep === 'interests'): ?>
-                    <!-- ШАГ 3: ИНТЕРЕСЫ -->
+                <?php if ($currentStep === 'interests'): ?>
+                    <!-- ШАГ 2: ИНТЕРЕСЫ -->
                     <form method="POST" class="auth-form">
                         <h2>Выберите интересы</h2>
-                        <p class="subtitle">Это поможет подобрать лучший контент</p>
+                        <p class="subtitle">Это поможет подобрать лучший контент для вас</p>
                         
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 100%;"></div>
@@ -267,7 +234,7 @@ $currentStep = $_SESSION['registration_step'] ?? null;
                             <?php endforeach; ?>
                         </div>
 
-                        <button type="submit" name="register_step3" class="btn btn-primary">Начать 🚀</button>
+                        <button type="submit" name="register_step2" class="btn btn-primary">Начать 🚀</button>
                         <?php if (isset($_SESSION['show_onboarding'])): ?>
                             <button type="submit" name="skip_interests" class="btn btn-link">Пропустить</button>
                         <?php endif; ?>
@@ -309,7 +276,7 @@ $currentStep = $_SESSION['registration_step'] ?? null;
                         <p class="subtitle">Заполните данные для регистрации</p>
                         
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 33%;"></div>
+                            <div class="progress-fill" style="width: 50%;"></div>
                         </div>
 
                         <div class="form-group">

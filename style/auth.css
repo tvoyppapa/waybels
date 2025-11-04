@@ -25,7 +25,7 @@ body {
 }
 
 /* ==========================================
-   ЛЕВАЯ ПАНЕЛЬ - BACKGROUND IMAGE
+   ЛЕВАЯ ПАНЕЛЬ - BACKGROUND IMAGE (ЗАКРУГЛЕННАЯ)
    ========================================== */
 
 .auth-left {
@@ -39,6 +39,8 @@ body {
     display: flex;
     align-items: flex-end;
     padding: 60px;
+    border-radius: 0 30px 30px 0;
+    margin-right: 20px;
 }
 
 .auth-overlay {
@@ -63,7 +65,7 @@ body {
     text-shadow: 0 1px 5px rgba(0,0,0,0.3);
 }
 
-/* Опциональный затемняющий overlay */
+/* Затемняющий overlay для читаемости текста */
 .auth-left::before {
     content: '';
     position: absolute;
@@ -73,6 +75,7 @@ body {
     bottom: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0) 100%);
     z-index: 1;
+    border-radius: 0 30px 30px 0;
 }
 
 /* ==========================================
