@@ -11,10 +11,9 @@ require_once 'config.php';
 require_once 'db.php';
 require_once 'helpers.php';
 
-// Получаем ошибки/успехи из сессии и очищаем
+// Получаем ошибки из сессии и очищаем (БЕЗ success!)
 $error = $_SESSION['error'] ?? '';
-$success = $_SESSION['success'] ?? '';
-unset($_SESSION['error'], $_SESSION['success']);
+unset($_SESSION['error']);
 
 $currentStep = $_SESSION['registration_step'] ?? null;
 
@@ -112,7 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'password' => password_hash($password, PASSWORD_BCRYPT)
                     ];
                     $_SESSION['registration_step'] = 'age';
-                    $_SESSION['success'] = 'Отлично! Теперь укажите возраст';
                 }
             } catch (PDOException $e) {
                 $_SESSION['error'] = 'Ошибка: ' . $e->getMessage();
@@ -132,7 +130,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['registration_data']['age'] = $age;
             $_SESSION['registration_step'] = 'interests';
-            $_SESSION['success'] = 'Последний шаг!';
         }
         
         header('Location: auth.php');
@@ -211,14 +208,11 @@ $currentStep = $_SESSION['registration_step'] ?? null;
 </head>
 <body>
     <div class="auth-wrapper">
-        <!-- ЛЕВАЯ ПАНЕЛЬ С ИЛЛЮСТРАЦИЕЙ -->
+        <!-- ЛЕВАЯ ПАНЕЛЬ С BACKGROUND -->
         <div class="auth-left">
-            <div class="auth-illustration-container">
-                <img src="/img/auth.png" alt="Иллюстрация" class="auth-illustration">
-                <div class="auth-illustration-text">
-                    <h3>Начните свое обучение</h3>
-                    <p>Вы можете получить все, что хотите, если будете усердно работать, доверять процессу и придерживаться плана.</p>
-                </div>
+            <div class="auth-overlay">
+                <h2>Начните свое обучение</h2>
+                <p>Вы можете получить все, что хотите, если будете усердно работать, доверять процессу и придерживаться плана.</p>
             </div>
         </div>
 
@@ -232,10 +226,6 @@ $currentStep = $_SESSION['registration_step'] ?? null;
 
                 <?php if ($error): ?>
                     <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
-                <?php endif; ?>
-                
-                <?php if ($success): ?>
-                    <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
                 <?php endif; ?>
 
                 <?php if ($currentStep === 'age'): ?>
