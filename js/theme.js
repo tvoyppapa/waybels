@@ -7,7 +7,7 @@
     const savedTheme = localStorage.getItem('aqum_theme') || 'auto';
     
     // Применяем тему
-    function applyTheme(theme) {
+    window.applyTheme = function(theme) {
         const root = document.documentElement;
         
         if (theme === 'dark') {
@@ -22,7 +22,7 @@
     }
     
     // Применяем сразу (до загрузки страницы)
-    applyTheme(savedTheme);
+    window.applyTheme(savedTheme);
     
     // Переключение темы
     window.toggleTheme = function() {
@@ -38,7 +38,7 @@
         }
         
         localStorage.setItem('aqum_theme', newTheme);
-        applyTheme(newTheme);
+        window.applyTheme(newTheme);
         
         // Обновляем иконку
         updateThemeIcon(newTheme);
@@ -76,7 +76,7 @@
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
         const theme = localStorage.getItem('aqum_theme') || 'auto';
         if (theme === 'auto') {
-            applyTheme('auto');
+            window.applyTheme('auto');
         }
     });
 })();

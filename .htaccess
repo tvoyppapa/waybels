@@ -1,38 +1,102 @@
-RewriteEngine On
-RewriteBase /
+# ====================================
+# ОСНОВНЫЕ НАСТРОЙКИ
+# ====================================
 
-# Защита от прямого доступа к файлам конфигурации
-<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql)$">
-    Order Allow,Deny
+# Включаем mod_rewrite
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # ====================================
+    # ЧИСТЫЕ URL ДЛЯ ПРОФИЛЕЙ (ВАЖНО: ДО ОСТАЛЬНЫХ ПРАВИЛ!)
+    # ====================================
+
+    # /@username -> profile.php?user=username
+    RewriteCond %{REQUEST_URI} ^/@([a-zA-Z0-9_]+)$
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^@([a-zA-Z0-9_]+)$ profile.php?user=$1 [L,QSA]
+
+    # Убираем trailing slash
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [R=301,L]
+
+    # Редирект с www на без www (опционально)
+    # RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+    # RewriteRule ^(.*)$ http://%1/$1 [R=301,L]
+
+    # Принудительный HTTPS (раскомментировать при необходимости)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+
+# ====================================
+# НАСТРОЙКИ PHP
+# ====================================
+
+<IfModule mod_php.c>
+    php_value memory_limit 256M
+    php_value max_execution_time 300
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value default_charset UTF-8
+</IfModule>
+
+
+# ====================================
+# БЕЗОПАСНОСТЬ
+# ====================================
+
+# Запрет доступа к скрытым файлам (.git, .env и т.п.)
+<FilesMatch "^\.">
+    Order allow,deny
     Deny from all
 </FilesMatch>
 
+# Защита от прямого доступа к конфигурационным и служебным файлам
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sql|sh)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# HTTP-заголовки безопасности
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header always append X-Frame-Options SAMEORIGIN
+    Header set X-Content-Type-Options nosniff
+</IfModule>
+
+
 # ====================================
-# ЧИСТЫЕ URL ДЛЯ ПРОФИЛЕЙ
+# ОПТИМИЗАЦИЯ
 # ====================================
 
-# /@username -> profile.php?user=username
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^@([a-zA-Z0-9_]+)$ profile.php?user=$1 [L,QSA]
+# Кеширование
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
 
-# Альтернативный вариант без @
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([a-zA-Z0-9_]+)$ profile.php?user=$1 [L,QSA]
+# Сжатие
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
 
 # ====================================
-# ОСТАЛЬНЫЕ ПРАВИЛА
+# ОБЩИЕ НАСТРОЙКИ
 # ====================================
 
-# Редирект с index.php на feed.php для авторизованных
-# (обрабатывается в самом index.php)
+DirectoryIndex index.php index.html
+Options -Indexes
 
-# Принудительный HTTPS (раскомментировать при необходимости)
-# RewriteCond %{HTTPS} off
-# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-# Убираем trailing slash
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} (.+)/$
-RewriteRule ^ %1 [R=301,L]
+ErrorDocument 404 /404.html
+ErrorDocument 403 /403.html
+ErrorDocument 500 /500.html

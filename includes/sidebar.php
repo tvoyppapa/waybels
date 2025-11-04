@@ -69,13 +69,14 @@ $compact_mode = isset($compact) && $compact === true;
     top: 0;
     bottom: 0;
     width: 80px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 20px 0;
     z-index: 1000;
-    box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 20px rgba(0,0,0,0.05);
 }
 
 .sidebar-header {
@@ -92,10 +93,15 @@ $compact_mode = isset($compact) && $compact === true;
     width: 42px;
     height: 42px;
     transition: transform 0.3s;
+    filter: none;
 }
 
 .sidebar-logo:hover {
     transform: scale(1.1);
+}
+
+[data-theme="dark"] .sidebar-logo {
+    filter: brightness(0) invert(1);
 }
 
 .sidebar-nav {
@@ -113,7 +119,7 @@ $compact_mode = isset($compact) && $compact === true;
     justify-content: center;
     width: 50px;
     height: 50px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-secondary);
     text-decoration: none;
     border-radius: 12px;
     transition: all 0.3s;
@@ -121,13 +127,13 @@ $compact_mode = isset($compact) && $compact === true;
 }
 
 .nav-item:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    transform: scale(1.1);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transform: scale(1.05);
 }
 
 .nav-item.active {
-    background: rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
 }
 
@@ -139,7 +145,7 @@ $compact_mode = isset($compact) && $compact === true;
     transform: translateY(-50%);
     width: 4px;
     height: 24px;
-    background: white;
+    background: linear-gradient(135deg, #667eea, #764ba2);
     border-radius: 0 4px 4px 0;
 }
 
@@ -163,16 +169,16 @@ $compact_mode = isset($compact) && $compact === true;
     height: 50px;
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.3s;
     border-radius: 12px;
 }
 
 .theme-toggle:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    transform: scale(1.1);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transform: scale(1.05);
 }
 
 .theme-icon {

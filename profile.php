@@ -14,24 +14,30 @@ if (!$current_user_id) {
     exit;
 }
 
-// Если передан user ID, получаем username
-if ($username && is_numeric($username)) {
+// Если НЕ передан username - показываем СВОЙ профиль (НЕ редиректим!)
+if (!$username) {
+    // Получаем username текущего пользователя
+    $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+    $stmt->execute([$current_user_id]);
+    $result = $stmt->fetch();
+    if ($result) {
+        $username = $result['username']; // Просто присваиваем, НЕ редиректим!
+    } else {
+        header('Location: feed.php');
+        exit;
+    }
+}
+
+// Если передан user ID (числовой), получаем username и редиректим
+if (is_numeric($username)) {
     $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
     $stmt->execute([$username]);
     $result = $stmt->fetch();
     if ($result) {
         header('Location: /@' . $result['username']);
         exit;
-    }
-}
-
-// Если не указан username, показываем свой профиль
-if (!$username) {
-    $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
-    $stmt->execute([$current_user_id]);
-    $result = $stmt->fetch();
-    if ($result) {
-        header('Location: /@' . $result['username']);
+    } else {
+        header('Location: feed.php');
         exit;
     }
 }

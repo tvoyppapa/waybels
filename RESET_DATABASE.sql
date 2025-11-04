@@ -15,7 +15,7 @@ USE aqum_db;
 -- ТАБЛИЦЫ
 -- ===============================================
 
--- Пользователи
+-- Пользователи (БЕЗ NICKNAME - используем только USERNAME!)
 CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
