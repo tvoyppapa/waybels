@@ -11,8 +11,11 @@ require_once 'config.php';
 require_once 'db.php';
 require_once 'helpers.php';
 
-$error = '';
-$success = '';
+// Получаем ошибки/успехи из сессии и очищаем
+$error = $_SESSION['error'] ?? '';
+$success = $_SESSION['success'] ?? '';
+unset($_SESSION['error'], $_SESSION['success']);
+
 $currentStep = $_SESSION['registration_step'] ?? null;
 
 // ==================================
@@ -22,12 +25,12 @@ $currentStep = $_SESSION['registration_step'] ?? null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // === ВХОД ===
-    if (isset($_POST['login'])) {
+    if (isset($_POST['login_submit'])) {
         $login = trim($_POST['login'] ?? '');
         $password = $_POST['password'] ?? '';
         
         if (empty($login) || empty($password)) {
-            $error = 'Заполните все поля';
+            $_SESSION['error'] = 'Заполните все поля';
         } else {
             try {
                 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR phone = ?");
@@ -45,19 +48,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (empty($user['interests'])) {
                         $_SESSION['registration_step'] = 'interests';
                         $_SESSION['show_onboarding'] = true;
-                        header('Location: auth.php');
-                        exit;
-                    } else {
-                        header('Location: feed.php');
-                        exit;
                     }
+                    
+                    header('Location: feed.php');
+                    exit;
                 } else {
-                    $error = 'Неверный email/телефон или пароль';
+                    $_SESSION['error'] = 'Неверный email/телефон или пароль';
                 }
             } catch (PDOException $e) {
-                $error = 'Ошибка: ' . $e->getMessage();
+                $_SESSION['error'] = 'Ошибка: ' . $e->getMessage();
             }
         }
+        
+        header('Location: auth.php');
+        exit;
     }
     
     // === РЕГИСТРАЦИЯ ШАГ 1 ===
@@ -68,38 +72,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = $_POST['password'] ?? '';
         
         if (empty($name) || empty($login) || empty($password)) {
-            $error = 'Заполните все поля';
+            $_SESSION['error'] = 'Заполните все поля';
+        } elseif (!preg_match('/^[а-яёА-ЯЁa-zA-Z\s\-]+$/u', $name)) {
+            $_SESSION['error'] = 'Имя может содержать только буквы';
         } elseif (strlen($password) < 6) {
-            $error = 'Пароль минимум 6 символов';
+            $_SESSION['error'] = 'Пароль минимум 6 символов';
         } else {
             try {
                 $isEmail = ($loginType === 'email');
                 
-                if ($isEmail && !filter_var($login, FILTER_VALIDATE_EMAIL)) {
-                    $error = 'Неверный формат email';
-                } else {
-                    $checkField = $isEmail ? 'email' : 'phone';
-                    $stmt = $pdo->prepare("SELECT id FROM users WHERE $checkField = ?");
-                    $stmt->execute([$login]);
-                    
-                    if ($stmt->fetch()) {
-                        $error = $isEmail ? 'Email уже занят' : 'Телефон уже занят';
+                if ($isEmail) {
+                    if (!filter_var($login, FILTER_VALIDATE_EMAIL)) {
+                        $_SESSION['error'] = 'Неверный формат email';
                     } else {
-                        $_SESSION['registration_data'] = [
-                            'name' => mb_convert_case(mb_strtolower($name), MB_CASE_TITLE, 'UTF-8'),
-                            'login' => $login,
-                            'is_email' => $isEmail,
-                            'password' => password_hash($password, PASSWORD_BCRYPT)
-                        ];
-                        $_SESSION['registration_step'] = 'age';
-                        header('Location: auth.php');
-                        exit;
+                        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                        $stmt->execute([$login]);
+                        if ($stmt->fetch()) {
+                            $_SESSION['error'] = 'Email уже занят';
+                        }
+                    }
+                } else {
+                    $cleanPhone = preg_replace('/[^\d+]/', '', $login);
+                    if (strlen($cleanPhone) < 11) {
+                        $_SESSION['error'] = 'Введите корректный номер телефона';
+                    } else {
+                        $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
+                        $stmt->execute([$cleanPhone]);
+                        if ($stmt->fetch()) {
+                            $_SESSION['error'] = 'Телефон уже занят';
+                        }
                     }
                 }
+                
+                if (!isset($_SESSION['error'])) {
+                    $_SESSION['registration_data'] = [
+                        'name' => mb_convert_case(mb_strtolower($name), MB_CASE_TITLE, 'UTF-8'),
+                        'login' => $isEmail ? $login : $cleanPhone,
+                        'is_email' => $isEmail,
+                        'password' => password_hash($password, PASSWORD_BCRYPT)
+                    ];
+                    $_SESSION['registration_step'] = 'age';
+                    $_SESSION['success'] = 'Отлично! Теперь укажите возраст';
+                }
             } catch (PDOException $e) {
-                $error = 'Ошибка: ' . $e->getMessage();
+                $_SESSION['error'] = 'Ошибка: ' . $e->getMessage();
             }
         }
+        
+        header('Location: auth.php');
+        exit;
     }
     
     // === РЕГИСТРАЦИЯ ШАГ 2: ВОЗРАСТ ===
@@ -107,13 +128,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $age = (int)($_POST['age'] ?? 0);
         
         if ($age < 13 || $age > 100) {
-            $error = 'Возраст должен быть от 13 до 100';
+            $_SESSION['error'] = 'Возраст должен быть от 13 до 100';
         } else {
             $_SESSION['registration_data']['age'] = $age;
             $_SESSION['registration_step'] = 'interests';
-            header('Location: auth.php');
-            exit;
+            $_SESSION['success'] = 'Последний шаг!';
         }
+        
+        header('Location: auth.php');
+        exit;
     }
     
     // === РЕГИСТРАЦИЯ ШАГ 3: ИНТЕРЕСЫ ===
@@ -121,47 +144,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $interests = $_POST['interests'] ?? [];
         
         if (empty($interests)) {
-            $error = 'Выберите хотя бы один интерес';
-        } else {
-            try {
-                $regData = $_SESSION['registration_data'];
-                $interestsString = implode(',', $interests);
-                
-                $emailValue = $regData['is_email'] ? $regData['login'] : null;
-                $phoneValue = !$regData['is_email'] ? $regData['login'] : null;
-                
-                $stmt = $pdo->prepare("
-                    INSERT INTO users (name, email, phone, password, age, interests, role, created_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, 'user', NOW())
-                ");
-                $stmt->execute([
-                    $regData['name'],
-                    $emailValue,
-                    $phoneValue,
-                    $regData['password'],
-                    $regData['age'],
-                    $interestsString
-                ]);
-                
-                $userId = $pdo->lastInsertId();
-                
-                $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-                $stmt->execute([$userId]);
-                $user = $stmt->fetch();
-                
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['name'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_role'] = $user['role'];
-                
-                unset($_SESSION['registration_step']);
-                unset($_SESSION['registration_data']);
-                
-                header('Location: feed.php');
-                exit;
-            } catch (PDOException $e) {
-                $error = 'Ошибка создания аккаунта: ' . $e->getMessage();
-            }
+            $_SESSION['error'] = 'Выберите хотя бы один интерес';
+            header('Location: auth.php');
+            exit;
+        }
+        
+        try {
+            $regData = $_SESSION['registration_data'];
+            $interestsString = implode(',', $interests);
+            
+            $emailValue = $regData['is_email'] ? $regData['login'] : null;
+            $phoneValue = !$regData['is_email'] ? $regData['login'] : null;
+            
+            $stmt = $pdo->prepare("
+                INSERT INTO users (name, email, phone, password, age, interests, role, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, 'user', NOW())
+            ");
+            $stmt->execute([
+                $regData['name'],
+                $emailValue,
+                $phoneValue,
+                $regData['password'],
+                $regData['age'],
+                $interestsString
+            ]);
+            
+            $userId = $pdo->lastInsertId();
+            
+            // Логиним
+            $_SESSION['user_id'] = $userId;
+            $_SESSION['user_name'] = $regData['name'];
+            $_SESSION['user_email'] = $emailValue;
+            $_SESSION['user_role'] = 'user';
+            
+            unset($_SESSION['registration_step']);
+            unset($_SESSION['registration_data']);
+            
+            header('Location: feed.php');
+            exit;
+        } catch (PDOException $e) {
+            $_SESSION['error'] = 'Ошибка создания аккаунта: ' . $e->getMessage();
+            header('Location: auth.php');
+            exit;
         }
     }
     
@@ -174,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Обновляем текущий шаг после обработки
+// Обновляем текущий шаг
 $currentStep = $_SESSION['registration_step'] ?? null;
 ?>
 <!DOCTYPE html>
@@ -189,7 +213,13 @@ $currentStep = $_SESSION['registration_step'] ?? null;
     <div class="auth-wrapper">
         <!-- ЛЕВАЯ ПАНЕЛЬ С ИЛЛЮСТРАЦИЕЙ -->
         <div class="auth-left">
-            <img src="/img/auth.png" alt="Иллюстрация" class="auth-illustration">
+            <div class="auth-illustration-container">
+                <img src="/img/auth.png" alt="Иллюстрация" class="auth-illustration">
+                <div class="auth-illustration-text">
+                    <h3>Начните свое обучение</h3>
+                    <p>Вы можете получить все, что хотите, если будете усердно работать, доверять процессу и придерживаться плана.</p>
+                </div>
+            </div>
         </div>
 
         <!-- ПРАВАЯ ПАНЕЛЬ С ФОРМАМИ -->
@@ -198,7 +228,6 @@ $currentStep = $_SESSION['registration_step'] ?? null;
                 
                 <div class="auth-logo">
                     <img src="/img/logo.svg" alt="<?php echo APP_NAME; ?>">
-                    <h1><?php echo APP_NAME; ?></h1>
                 </div>
 
                 <?php if ($error): ?>
@@ -214,10 +243,9 @@ $currentStep = $_SESSION['registration_step'] ?? null;
                     <form method="POST" class="auth-form">
                         <h2>Ваш возраст</h2>
                         <p class="subtitle">Укажите ваш возраст для персонализации</p>
-                        <div class="progress-steps">
-                            <span class="step done">1</span>
-                            <span class="step active">2</span>
-                            <span class="step">3</span>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 66%;"></div>
                         </div>
 
                         <div class="form-group">
@@ -232,10 +260,9 @@ $currentStep = $_SESSION['registration_step'] ?? null;
                     <form method="POST" class="auth-form">
                         <h2>Выберите интересы</h2>
                         <p class="subtitle">Это поможет подобрать лучший контент</p>
-                        <div class="progress-steps">
-                            <span class="step done">1</span>
-                            <span class="step done">2</span>
-                            <span class="step active">3</span>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
                         </div>
 
                         <div class="interests-grid">
@@ -272,9 +299,9 @@ $currentStep = $_SESSION['registration_step'] ?? null;
                             <input type="password" name="password" placeholder="Введите пароль" required>
                         </div>
 
-                        <button type="submit" name="login" class="btn btn-primary">Войти</button>
+                        <button type="submit" name="login_submit" class="btn btn-primary">Войти</button>
                     
-                        <div class="divider">или войдите с помощью</div>
+                        <div class="divider"><span>или войдите с помощью</span></div>
                         
                         <button type="button" class="btn btn-google" onclick="alert('Скоро!')">
                             <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
@@ -290,27 +317,26 @@ $currentStep = $_SESSION['registration_step'] ?? null;
                     <form method="POST" id="register-form" class="auth-form">
                         <h2>Создать аккаунт</h2>
                         <p class="subtitle">Заполните данные для регистрации</p>
-                        <div class="progress-steps">
-                            <span class="step active">1</span>
-                            <span class="step">2</span>
-                            <span class="step">3</span>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 33%;"></div>
                         </div>
 
                         <div class="form-group">
-                            <label>Имя и фамилия</label>
-                            <input type="text" name="name" id="register-name" placeholder="Иван Петров" required>
+                            <label>Имя</label>
+                            <input type="text" name="name" id="register-name" placeholder="Иван" required>
                         </div>
 
                         <div class="form-group">
-                            <label>
-                                Email или номер телефона
+                            <label id="login-label">
+                                Email
                                 <span class="input-type-toggle">
                                     <a href="#" class="active" data-type="email">Email</a>
                                     <span class="separator">|</span>
                                     <a href="#" data-type="phone">Телефон</a>
                                 </span>
                             </label>
-                            <input type="text" name="login" id="register-login" placeholder="example@mail.com" required>
+                            <input type="email" name="login" id="register-login" placeholder="example@mail.com" required>
                             <input type="hidden" name="login_type" id="login-type" value="email">
                         </div>
 
@@ -321,7 +347,7 @@ $currentStep = $_SESSION['registration_step'] ?? null;
 
                         <button type="submit" name="register_step1" class="btn btn-primary">Продолжить</button>
                         
-                        <div class="divider">или зарегистрируйтесь с помощью</div>
+                        <div class="divider"><span>или зарегистрируйтесь с помощью</span></div>
                         
                         <button type="button" class="btn btn-google" onclick="alert('Скоро!')">
                             <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>

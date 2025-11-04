@@ -1,5 +1,5 @@
 /* ==========================================
-   AQUM AUTH.JS
+   AQUM AUTH.JS - ФИНАЛЬНАЯ ВЕРСИЯ
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -28,12 +28,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ==========================================
-    // ПЕРЕКЛЮЧАТЕЛЬ EMAIL/PHONE (МАЛЕНЬКИЕ ССЫЛКИ)
+    // ПЕРЕКЛЮЧАТЕЛЬ EMAIL/PHONE
     // ==========================================
     
     const toggleLinks = document.querySelectorAll('.input-type-toggle a');
     const loginTypeInput = document.getElementById('login-type');
     const registerLoginInput = document.getElementById('register-login');
+    const loginLabel = document.getElementById('login-label');
     
     toggleLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -49,12 +50,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 loginTypeInput.value = type;
             }
             
-            // Меняем placeholder и тип
-            if (registerLoginInput) {
+            // Меняем label и placeholder
+            if (registerLoginInput && loginLabel) {
                 if (type === 'email') {
+                    // Меняем только первую часть label (до span)
+                    const labelText = loginLabel.childNodes[0];
+                    if (labelText) {
+                        labelText.textContent = 'Email ';
+                    }
                     registerLoginInput.placeholder = 'example@mail.com';
                     registerLoginInput.type = 'email';
                 } else {
+                    const labelText = loginLabel.childNodes[0];
+                    if (labelText) {
+                        labelText.textContent = 'Номер телефона ';
+                    }
                     registerLoginInput.placeholder = '+7 999 123 45 67';
                     registerLoginInput.type = 'tel';
                 }
@@ -64,13 +74,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ==========================================
-    // ФОРМАТИРОВАНИЕ ИМЕНИ
+    // ФОРМАТИРОВАНИЕ ИМЕНИ (ТОЛЬКО БУКВЫ)
     // ==========================================
     
     const nameInput = document.getElementById('register-name');
     if (nameInput) {
         nameInput.addEventListener('input', function(e) {
-            this.value = this.value.replace(/[0-9_\.@#$%^&*()+=\[\]{};:'",<>?\/\\|`~!]/g, '');
+            // Удаляем всё кроме букв, пробелов и дефисов
+            this.value = this.value.replace(/[^а-яёА-ЯЁa-zA-Z\s\-]/g, '');
         });
         
         nameInput.addEventListener('blur', function(e) {
@@ -92,13 +103,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const type = loginTypeInput?.value;
             
             if (type === 'phone') {
+                // Оставляем только цифры и +
                 let value = this.value.replace(/[^\d+]/g, '');
                 
+                // Автоматически добавляем +7
                 if (value.startsWith('8')) {
                     value = '+7' + value.slice(1);
                 } else if (value.startsWith('7') && !value.startsWith('+')) {
                     value = '+' + value;
-                } else if (!value.startsWith('+') && value.length > 0) {
+                } else if (!value.startsWith('+') && value.length > 0 && !value.startsWith('7')) {
                     value = '+7' + value;
                 }
                 
@@ -136,33 +149,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         interestsForm.addEventListener('submit', function(e) {
             const checked = Array.from(checkboxes).filter(cb => cb.checked);
-            if (checked.length === 0) {
+            if (checked.length === 0 && e.submitter?.name !== 'skip_interests') {
                 e.preventDefault();
                 alert('Выберите хотя бы один интерес');
             }
         });
     }
-    
-    // ==========================================
-    // АНИМАЦИЯ ЗАГРУЗКИ
-    // ==========================================
-    
-    const allForms = document.querySelectorAll('form');
-    allForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('button[type="submit"]:not(.btn-link)');
-            if (submitBtn && !submitBtn.disabled) {
-                submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.7';
-                const originalText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '⏳ Загрузка...';
-                
-                setTimeout(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.style.opacity = '1';
-                    submitBtn.innerHTML = originalText;
-                }, 10000);
-            }
-        });
-    });
 });
