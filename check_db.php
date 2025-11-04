@@ -16,7 +16,8 @@ try {
     
     if (empty($tables)) {
         echo "❌ <strong style='color:red'>ТАБЛИЦ НЕТ!</strong><br><br>";
-        echo "Нужно импортировать: <code>database_waybels.sql</code><br>";
+        echo "Нужно импортировать: <code>setup_database.sql</code><br>";
+        echo "Или используйте веб-интерфейс: <code>setup_db_web.php</code><br>";
     } else {
         echo "<ul>";
         foreach ($tables as $table) {
