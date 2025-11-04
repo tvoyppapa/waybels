@@ -49,7 +49,7 @@ include 'includes/layout.php';
                     <div class="setting-desc">@<?= e($user['username']) ?></div>
                 </div>
             </div>
-            <button class="btn btn-secondary" onclick="window.location.href='profile.php?user=<?= $user['username'] ?>'">Просмотр</button>
+            <button class="btn btn-secondary" onclick="window.location.href='/@<?= $user['username'] ?>'">Просмотр</button>
         </div>
     </section>
     

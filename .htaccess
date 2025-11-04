@@ -11,11 +11,10 @@
     # ЧИСТЫЕ URL ДЛЯ ПРОФИЛЕЙ (ВАЖНО: ДО ОСТАЛЬНЫХ ПРАВИЛ!)
     # ====================================
 
-    # /@username -> profile.php?user=username
-    RewriteCond %{REQUEST_URI} ^/@([a-zA-Z0-9_]+)$
+    # /@username -> profile.php?username=username
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^@([a-zA-Z0-9_]+)$ profile.php?user=$1 [L,QSA]
+    RewriteRule ^@([A-Za-z0-9_]+)$ profile.php?username=$1 [L,QSA]
 
     # Убираем trailing slash
     RewriteCond %{REQUEST_FILENAME} !-d

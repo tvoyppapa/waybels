@@ -6,7 +6,7 @@ require_once 'db.php';
 require_once 'helpers.php';
 
 // Определяем чей профиль смотрим
-$username = $_GET['user'] ?? null;
+$username = $_GET['username'] ?? null;
 $current_user_id = $_SESSION['user_id'] ?? null;
 
 if (!$current_user_id) {
@@ -14,21 +14,21 @@ if (!$current_user_id) {
     exit;
 }
 
-// Если НЕ передан username - показываем СВОЙ профиль (НЕ редиректим!)
+// Если НЕ передан username - показываем СВОЙ профиль
 if (!$username) {
     // Получаем username текущего пользователя
     $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
     $stmt->execute([$current_user_id]);
     $result = $stmt->fetch();
     if ($result) {
-        $username = $result['username']; // Просто присваиваем, НЕ редиректим!
+        $username = $result['username'];
     } else {
-        header('Location: feed.php');
-        exit;
+        http_response_code(404);
+        die('Пользователь не найден');
     }
 }
 
-// Если передан user ID (числовой), получаем username и редиректим
+// Если передан ID (числовой), получаем username и редиректим на чистый URL
 if (is_numeric($username)) {
     $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
     $stmt->execute([$username]);
@@ -37,8 +37,8 @@ if (is_numeric($username)) {
         header('Location: /@' . $result['username']);
         exit;
     } else {
-        header('Location: feed.php');
-        exit;
+        http_response_code(404);
+        die('Пользователь не найден');
     }
 }
 
@@ -48,7 +48,31 @@ $stmt->execute([$username]);
 $user = $stmt->fetch();
 
 if (!$user) {
-    header('Location: feed.php');
+    http_response_code(404);
+    echo '<!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Пользователь не найден - aqum</title>
+        <style>
+            body { font-family: system-ui; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f7fafc; }
+            .error-container { text-align: center; padding: 40px; }
+            .error-code { font-size: 72px; font-weight: 700; color: #667eea; margin: 0; }
+            .error-message { font-size: 24px; color: #2d3748; margin: 20px 0; }
+            .error-desc { font-size: 16px; color: #718096; margin-bottom: 30px; }
+            .btn { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }
+        </style>
+    </head>
+    <body>
+        <div class="error-container">
+            <div class="error-code">404</div>
+            <div class="error-message">Пользователь @' . htmlspecialchars($username) . ' не найден</div>
+            <div class="error-desc">Возможно, вы ошиблись в username или профиль был удален</div>
+            <a href="/feed.php" class="btn">← Вернуться в ленту</a>
+        </div>
+    </body>
+    </html>';
     exit;
 }
 
